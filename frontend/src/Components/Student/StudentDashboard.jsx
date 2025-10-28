@@ -3,28 +3,53 @@ import { useNavigate } from 'react-router-dom';
 
 export default function StudentDashboard() {
   const [name, setName] = useState('');
+  const [attempts, setAttempts] = useState([]);
   const navigate = useNavigate();
-  
+
   useEffect(() => {
-    const fetchName = async () => {
+    const fetchUserAndAttempts = async () => {
       try {
-        const res = await fetch('http://localhost:5000/api/auth/me', {
-          method: 'GET',
+        // Fetch student name
+        const userRes = await fetch('http://localhost:5000/api/auth/me', {
           credentials: 'include',
         });
-
-        const data = await res.json();
-        console.log('User info:', data);
-
-        if (res.ok && data.name) {
-          setName(data.name);
+        const userData = await userRes.json();
+        if (userRes.ok && userData.name) {
+          setName(userData.name);
         }
+
+        // Fetch student's attempt IDs
+        const rawRes = await fetch('http://localhost:5000/api/attempts/my', {
+          credentials: 'include',
+        });
+        const rawData = await rawRes.json();
+        console.log('📦 Raw attempts:', rawData);
+
+        if (!rawRes.ok || !Array.isArray(rawData)) {
+          throw new Error('Invalid attempt data');
+        }
+
+        // Fetch full details for each attempt
+        const detailedAttempts = await Promise.all(
+          rawData
+            .filter((a) => a.exam) // ✅ filter out deleted exams
+            .map(async (a) => {
+              const res = await fetch(`http://localhost:5000/api/attempts/${a._id}`, {
+                credentials: 'include',
+              });
+              const data = await res.json();
+              return res.ok ? data : null;
+            })
+        );
+
+        const valid = detailedAttempts.filter((a) => a && a.examTitle);
+        setAttempts(valid);
       } catch (err) {
-        console.error('Fetch failed:', err);
+        console.error('❌ Error loading dashboard:', err);
       }
     };
 
-    fetchName();
+    fetchUserAndAttempts();
   }, []);
 
   return (
@@ -38,15 +63,7 @@ export default function StudentDashboard() {
             className="btn btn-outline-primary text-start"
           >
             <i className="bi bi-journal-text me-2"></i>
-            View Exam
-          </button>
-
-          <button
-            onClick={() => navigate('/exam/result/:examId')}
-            className="btn btn-outline-success text-start"
-          >
-            <i className="bi bi-bar-chart-fill me-2"></i>
-            View Result
+            View Exams
           </button>
         </div>
       </aside>
@@ -54,9 +71,52 @@ export default function StudentDashboard() {
       {/* Main Content */}
       <main className="flex-grow-1 p-5">
         <h1 className="display-6 fw-bold mb-3">Welcome, {name || 'Student'}!</h1>
-        <p className="text-muted">
-          Use the sidebar to access your exams and view your results.
-        </p>
+        <p className="text-muted">Here are your recent exam attempts:</p>
+
+        {attempts.length === 0 ? (
+          <p>No valid attempts found.</p>
+        ) : (
+          <div className="row">
+            {attempts.map((attempt) => (
+              <div key={attempt._id} className="col-md-6 mb-4">
+                <div className="card p-3 shadow-sm">
+                  <h5>{attempt.examTitle}</h5>
+                  <p>
+                    {attempt.submittedAt
+                      ? `Submitted: ${new Date(attempt.submittedAt).toLocaleString()}`
+                      : 'Not yet submitted'}
+                  </p>
+                  {attempt.submittedAt && (
+                    <p>
+                      <strong>Score:</strong> {attempt.score} / {attempt.totalQuestions}<br />
+                      <strong>Percentage:</strong> {attempt.percentage}%<br />
+                      <strong>Review:</strong> {attempt.review}
+                    </p>
+                  )}
+                  <div className="d-flex gap-2">
+                    {attempt.submittedAt ? (
+                      <button
+                        className="btn btn-outline-success"
+                        onClick={() => navigate(`/student/result/${attempt._id}`)}
+                      >
+                        View Result
+                      </button>
+                    ) : (
+                      <button
+                        className="btn btn-outline-warning"
+                        onClick={() =>
+                          navigate(`/student/attempt/${attempt.exam}/${attempt._id}`)
+                        }
+                      >
+                        Continue Exam
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </main>
     </div>
   );

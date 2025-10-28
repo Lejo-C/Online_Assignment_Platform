@@ -79,7 +79,7 @@ router.post('/login', async (req, res) => {
 // 👤 Get current user
 router.get('/me', protect, async (req, res) => {
   try {
-    const { name, email, role } = req.user;
+    const { id: _id, name, email, role } = req.user;
     res.json({ name, email, role: role || 'student' });
   } catch (err) {
     console.error('❌ /me error:', err);

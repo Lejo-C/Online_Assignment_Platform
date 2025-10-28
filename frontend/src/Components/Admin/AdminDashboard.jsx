@@ -3,7 +3,10 @@ import { useNavigate } from 'react-router-dom';
 export default function AdminDashboard() {
   const navigate = useNavigate();
 
- return (
+  // Replace this with actual logic to get the exam ID
+  const examId = '652f1a1234567890abcdef12'; // Example ObjectId
+
+  return (
     <div className="d-flex min-vh-100 bg-light">
       {/* Sidebar */}
       <aside className="bg-white border-end p-4" style={{ width: '260px' }}>
@@ -18,7 +21,7 @@ export default function AdminDashboard() {
           </button>
 
           <button
-            onClick={() => navigate('/admin/view-result')}
+            onClick={() => navigate(`/admin/all-results`)}
             className="btn btn-outline-success text-start"
           >
             <i className="bi bi-bar-chart-line-fill me-2"></i>
@@ -43,7 +46,7 @@ export default function AdminDashboard() {
           </button>
 
           <button
-            onClick={() => navigate('/proctor/monitor')}
+            onClick={() => navigate('/admin/monitor-student')}
             className="btn btn-outline-info text-start"
           >
             <i className="bi bi-eye-fill me-2"></i>
@@ -65,8 +68,6 @@ export default function AdminDashboard() {
             <i className="bi bi-journal-text me-2"></i>
             Review Logs
           </button>
-
-          
         </div>
       </aside>
 

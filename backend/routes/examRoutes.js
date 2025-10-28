@@ -4,8 +4,51 @@ import Exam from '../models/Exam.js';
 import Question from '../models/Question.js';
 import Attempt from '../models/Attempt.js';
 import User from '../models/User.js';
-import { protect } from '../middleware/authMiddleware.js';
+import { protect, isAdmin } from '../middleware/authMiddleware.js';
+import ExamAttempt from '../models/Attempt.js';
+
 const router = express.Router();
+
+// ✅ Get active students currently attempting exams
+router.get('/active-students', async (req, res) => {
+  try {
+    const activeAttempts = await ExamAttempt.find({ submitted: false }).populate('studentId', 'name');
+    const students = activeAttempts.map((attempt) => ({
+      id: attempt.studentId._id,
+      name: attempt.studentId.name,
+    }));
+    res.json(students);
+  } catch (err) {
+    console.error('❌ Error fetching active students:', err);
+    res.status(500).json({ error: 'Failed to fetch active students' });
+  }
+});
+
+router.post('/:examId/start', protect, async (req, res) => {
+  try {
+    const existing = await Attempt.findOne({
+      student: req.user._id,
+      exam: req.params.examId,
+    });
+
+    if (!existing) {
+      const attempt = new Attempt({
+        student: req.user._id,
+        exam: req.params.examId,
+        submitted: false,
+      });
+      await attempt.save();
+      console.log(`🚀 Created attempt for student ${req.user._id}`);
+    } else {
+      console.log(`🔄 Attempt already exists for student ${req.user._id}`);
+    }
+
+    res.json({ message: 'Exam attempt initialized' });
+  } catch (err) {
+    console.error('❌ Error creating exam attempt:', err);
+    res.status(500).json({ error: 'Failed to start exam' });
+  }
+});
 
 // ✅ Create a new exam
 router.post('/create', protect, async (req, res) => {
@@ -127,63 +170,7 @@ router.delete('/delete/:id', protect, async (req, res) => {
   }
 });
 
-// ✅ Get current user info
-router.get('/me', protect, async (req, res) => {
-  try {
-    const user = await User.findById(req.user._id).select('-password');
-    if (!user) return res.status(404).json({ error: 'User not found' });
-    res.json(user);
-  } catch (err) {
-    console.error('❌ /me route error:', err);
-    res.status(500).json({ error: 'Server error' });
-  }
-});
 
-// ✅ Get exam by ID
-router.get('/:id', protect, async (req, res) => {
-  try {
-    const exam = await Exam.findById(req.params.id);
-    if (!exam) return res.status(404).json({ error: 'Exam not found' });
-
-    res.json(exam);
-  } catch (err) {
-    console.error('❌ Fetch exam by ID error:', err);
-    res.status(500).json({ error: 'Server error' });
-  }
-});
-
-// ✅ Get exam questions
-router.get('/:id/questions', protect, async (req, res) => {
-  try {
-    const exam = await Exam.findById(req.params.id).populate('questions');
-    if (!exam) return res.status(404).json({ error: 'Exam not found' });
-
-    res.json(exam.questions);
-  } catch (err) {
-    console.error('❌ Fetch exam questions error:', err);
-    res.status(500).json({ error: 'Server error' });
-  }
-});
-
-router.get('/:id/draft', protect, async (req, res) => {
-  try {
-    const attempt = await Attempt.findOne({
-      student: req.user._id,
-      exam: req.params.id,
-    });
-
-    if (!attempt) {
-      return res.json({ answers: {}, markedForReview: {} });
-    }
-
-    res.json({
-      answers: attempt.answers || {},
-      markedForReview: attempt.markedForReview || {},
-    });
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to load draft' });
-  }
-});
 
 // POST draft attempt
 router.post('/:id/draft', protect, async (req, res) => {
@@ -214,104 +201,72 @@ router.post('/:id/draft', protect, async (req, res) => {
   }
 });
 
-router.post('/:id/submit', protect, async (req, res) => {
+router.post('/attempts', protect, async (req, res) => {
   try {
-    const examId = req.params.id;
+    const { examId } = req.body;
     const studentId = req.user._id;
-    const { answers } = req.body;
 
-    const questions = await Question.find({ exam: examId });
-    let score = 0;
+    const existing = await Attempt.findOne({ student: studentId, exam: examId });
+    if (existing && existing.submittedAt) {
+      return res.status(400).json({ error: 'You have already submitted this exam.' });
+    }
 
-    questions.forEach((q) => {
-      const given = answers[q._id];
-      if (given && given === q.correctAnswer) {
-        score += 1;
-      }
-    });
+    const attempt = new Attempt({ student: studentId, exam: examId });
+    await attempt.save();
 
-    const total = questions.length;
-    const percent = total > 0 ? (score / total) * 100 : 0;
-
-    let review = '';
-    if (percent === 100) review = 'Perfect score! You nailed it 💯';
-    else if (percent >= 80) review = 'Great job! You’ve mastered most of the material.';
-    else if (percent >= 50) review = 'Good effort! Review the missed questions to improve.';
-    else review = 'Needs improvement. Consider revisiting the concepts.';
-
-    const attempt = await Attempt.findOneAndUpdate(
-      { student: studentId, exam: examId },
-      {
-        answers,
-        score,
-        submittedAt: new Date(),
-        review,
-      },
-      { upsert: true, new: true }
-    );
-
-    res.json({
-      message: 'Exam submitted successfully',
-      score,
-      total,
-      percent,
-      review,
-    });
+    res.json({ attemptId: attempt._id });
   } catch (err) {
-    console.error('❌ Error in submit route:', err);
-    res.status(500).json({ error: 'Failed to submit exam' });
+    console.error('❌ Error creating attempt:', err);
+    res.status(500).json({ error: 'Failed to create attempt' });
   }
 });
 
-// ✅ Keep only ONE result route - this should be the final, working version
-router.get('/:id/result', protect, async (req, res) => {
+router.get('/:id/questions', async (req, res) => {
   try {
-    const examId = req.params.id;  // ✅ Correctly extract the ID from params
-    const studentId = req.user._id;
-
-    console.log('📥 GET /result for exam:', examId, 'student:', studentId);
-
-    // ✅ Use the extracted examId variable, not ":examId" string
-    const exam = await Exam.findById(examId);
+    const exam = await Exam.findById(req.params.id).populate('questions');
     if (!exam) {
-      console.log('❌ Exam not found');
       return res.status(404).json({ error: 'Exam not found' });
     }
-
-    const attempt = await Attempt.findOne({ student: studentId, exam: examId });
-    if (!attempt) {
-      console.log('❌ Attempt not found');
-      return res.status(404).json({ error: 'No attempt found' });
-    }
-
-    if (!attempt.submittedAt) {
-      console.log('❌ Attempt not submitted yet');
-      return res.status(400).json({ error: 'Attempt not submitted yet' });
-    }
-
-    const total = await Question.countDocuments({ exam: examId });
-    const percent = total > 0 ? (attempt.score / total) * 100 : 0;
-
-    let review = '';
-    if (percent === 100) review = 'Perfect score! You nailed it 💯';
-    else if (percent >= 80) review = 'Great job! Youve mastered most of the material.';
-    else if (percent >= 50) review = 'Good effort! Review the missed questions to improve.';
-    else review = 'Needs improvement. Consider revisiting the concepts.';
-
-    console.log('✅ Result ready:', { score: attempt.score, total, percent });
-
-    res.json({
-      examName: exam.name,
-      score: attempt.score,
-      total,
-      percent,
-      review,
-      submittedAt: attempt.submittedAt,
-    });
+    res.json({ questions: exam.questions });
   } catch (err) {
-    console.error('❌ Server error in /result:', err);
-    res.status(500).json({ error: 'Failed to fetch result' });
+    console.error('❌ Error fetching exam questions:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
+
+router.get('/:id', protect, async (req, res) => {
+  
+  try {
+    const exam = await Exam.findById(req.params.id)
+      .select('name difficulty type schedule duration questions') // ✅ include all needed fields
+      .populate({
+    path: 'questions',
+    select: 'text options correctAnswer category difficulty type',
+  });
+
+    if (!exam) return res.status(404).json({ error: 'Exam not found' });
+
+    console.log('📤 Sending exam:', exam); // debug log
+    res.json(exam);
+  } catch (err) {
+    console.error('❌ Error fetching exam:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+router.get('/my', protect, async (req, res) => {
+  try {
+    const attempts = await Attempt.find({ student: req.user._id }).populate({
+      path: 'exam',
+      select: 'name',
+    });
+
+    res.json(attempts);
+  } catch (err) {
+    console.error('❌ Error fetching attempts:', err);
+    res.status(500).json({ error: 'Failed to load attempts' });
+  }
+});
+
 
 export default router;

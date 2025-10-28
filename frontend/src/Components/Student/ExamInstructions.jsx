@@ -7,22 +7,41 @@ export default function ExamInstructions() {
   const [message, setMessage] = useState('');
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchExam = async () => {
-      try {
-        const res = await fetch(`http://localhost:5000/api/exams/${examId}`,{credentials: 'include',});
-        const data = await res.json();
-        setExam(data);
-      } catch (err) {
-        setMessage('Failed to load exam details');
-      }
-    };
-    fetchExam();
-  }, [examId]);
+ useEffect(() => {
+  fetch(`http://localhost:5000/api/exams/${examId}`, {
+    credentials: 'include',
+  })
+    .then(async (res) => {
+      if (!res.ok) throw new Error('Failed to fetch exam');
+      const data = await res.json();
+      setExam(data);
+      console.log('📥 Received exam:', data);
+    })
+    .catch((err) => {
+      console.error('❌ Error loading exam:', err);
+    });
+}, [examId]);
 
-  const handleStart = () => {
-    navigate(`/exam/attempt/${examId}`, { replace: true });
-  };
+
+
+  const handleStart = async () => {
+  try {
+    const res = await fetch('http://localhost:5000/api/attempts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ examId }),
+    });
+
+    const data = await res.json();
+    const attemptId = data.attemptId;
+
+    navigate(`/student/attempt/${examId}/${attemptId}`);
+  } catch (err) {
+    setMessage('Failed to start exam');
+  }
+};
+
 
   if (!exam) return <div className="container mt-4">Loading...</div>;
 
