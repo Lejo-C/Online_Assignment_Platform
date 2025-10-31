@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import 'animate.css';
 
 export default function ViewStudents() {
   const [students, setStudents] = useState([]);
@@ -45,11 +46,11 @@ export default function ViewStudents() {
   };
 
   return (
-    <div className="container mt-4">
-      <h2 className="h4 fw-bold mb-3">Student List</h2>
-      <div className="table-responsive">
-        <table className="table table-bordered table-hover bg-white">
-          <thead className="table-light">
+    <div className="container mt-4 animate__animated animate__fadeIn">
+      <h2 className="h4 fw-bold mb-4 text-primary animate__animated animate__fadeInDown">🎓 Student List</h2>
+      <div className="table-responsive animate__animated animate__fadeInUp">
+        <table className="table table-bordered table-hover bg-white shadow-sm">
+          <thead className="table-primary">
             <tr>
               <th>Name</th>
               <th>Email</th>
@@ -60,23 +61,39 @@ export default function ViewStudents() {
             </tr>
           </thead>
           <tbody>
-            {students.map((student) => (
-              <tr key={student._id}>
-                <td>{student.name}</td>
-                <td>{student.email}</td>
-                <td>{student.gender}</td>
-                <td>{new Date(student.dob).toLocaleDateString()}</td>
-                <td>{student.role}</td>
-                <td>
-                  <button className="btn btn-sm btn-primary me-2" onClick={() => handleEdit(student._id)}>
-                    ✏️ Edit
-                  </button>
-                  <button className="btn btn-sm btn-danger" onClick={() => handleDelete(student._id)}>
-                    🗑️ Delete
-                  </button>
+            {students.length > 0 ? (
+              students.map((student) => (
+                <tr key={student._id} className="align-middle">
+                  <td>{student.name}</td>
+                  <td>{student.email}</td>
+                  <td>{student.gender}</td>
+                  <td>{new Date(student.dob).toLocaleDateString()}</td>
+                  <td>
+                    <span className="badge bg-success">{student.role}</span>
+                  </td>
+                  <td>
+                    <button
+                      className="btn btn-sm btn-outline-primary me-2"
+                      onClick={() => handleEdit(student._id)}
+                    >
+                      ✏️ Edit
+                    </button>
+                    <button
+                      className="btn btn-sm btn-outline-danger"
+                      onClick={() => handleDelete(student._id)}
+                    >
+                      🗑️ Delete
+                    </button>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="6" className="text-center text-muted">
+                  No students found.
                 </td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>

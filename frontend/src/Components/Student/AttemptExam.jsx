@@ -205,33 +205,37 @@ console.log('🧠 Preloaded answers:', initialAnswers);
 
 
   return (
-    <div className="container mt-4">
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <h2>📝 Attempt Exam</h2>
-        <div className="badge bg-warning text-dark fs-5">
-          ⏳ Time Left: {formatTime(timeLeft)}
-        </div>
+  <div className="container mt-4">
+    <div className="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4">
+      <h2 className="fw-bold text-primary mb-3 mb-md-0 animate__animated animate__fadeInDown">
+        📝 Attempt Exam
+      </h2>
+      <div className="badge bg-warning text-dark fs-5 px-3 py-2 rounded-pill animate__animated animate__pulse animate__infinite">
+        ⏳ Time Left: {formatTime(timeLeft)}
       </div>
+    </div>
 
-      {loading ? (
-        <p>Loading questions...</p>
-      ) : error ? (
-        <p className="text-danger">{error}</p>
-      ) : (
-        <div className="d-flex">
-          <div style={{ minWidth: '80px' }}>
+    {loading ? (
+      <p className="text-center text-muted">Loading questions...</p>
+    ) : error ? (
+      <p className="text-danger text-center">{error}</p>
+    ) : (
+      <div className="row">
+        {/* Question Navigator */}
+        <div className="col-12 col-md-2 mb-4 mb-md-0">
+          <div className="d-flex flex-wrap gap-2 justify-content-center">
             {questions.map((q, i) => {
               const isVisited = visited.has(i);
               const isAnswered = selectedAnswers[q._id];
 
-              let btnClass = 'btn-outline-light';
+              let btnClass = 'btn-outline-dark';
               if (isAnswered) btnClass = 'btn-success';
               else if (isVisited) btnClass = 'btn-danger';
 
               return (
                 <button
                   key={q._id}
-                  className={`btn btn-sm mb-2 w-100 ${btnClass} ${i === currentIndex ? 'border border-3 border-dark' : ''}`}
+                  className={`btn btn-sm ${btnClass} ${i === currentIndex ? 'border border-3 border-dark' : ''} animate__animated animate__fadeIn`}
                   onClick={() => setCurrentIndex(i)}
                 >
                   {i + 1}
@@ -239,58 +243,68 @@ console.log('🧠 Preloaded answers:', initialAnswers);
               );
             })}
           </div>
+        </div>
 
-          <div className="flex-grow-1 ms-4">
-            <div className="card p-3 mb-3 shadow-sm">
-              <h5>Question {currentIndex + 1} of {questions.length}</h5>
-              {currentQuestion ? (
-                <>
-                  <p><strong>{currentQuestion.text}</strong></p>
-                  {currentQuestion.options.map((opt, i) => (
-                    <label key={i} className="d-block ms-3">
-                      <input
-                        type="radio"
-                        name={`question-${currentQuestion._id}`}
-                        checked={selectedAnswers[currentQuestion._id.toString()] === opt}
-                        onChange={() => handleAnswerChange(currentQuestion._id, opt)}
-                      />{' '}
-                      {opt}
-                    </label>
-                  ))}
-                </>
-              ) : (
-                <p className="text-danger">❌ Question not found.</p>
-              )}
-            </div>
+        {/* Question Display */}
+        <div className="col-12 col-md-10">
+          <div className="card p-4 mb-3 shadow-sm animate__animated animate__fadeInUp">
+            <h5 className="mb-3 text-secondary">
+              Question {currentIndex + 1} of {questions.length}
+            </h5>
+            {currentQuestion ? (
+              <>
+                <p className="fw-semibold">{currentQuestion.text}</p>
+                {currentQuestion.options.map((opt, i) => (
+                  <label key={i} className="d-block mb-2 ps-3">
+                    <input
+                      type="radio"
+                      name={`question-${currentQuestion._id}`}
+                      checked={selectedAnswers[currentQuestion._id.toString()] === opt}
+                      onChange={() => handleAnswerChange(currentQuestion._id, opt)}
+                      className="form-check-input me-2"
+                    />
+                    {opt}
+                  </label>
+                ))}
+              </>
+            ) : (
+              <p className="text-danger">❌ Question not found.</p>
+            )}
+          </div>
 
-            <div className="d-flex justify-content-between">
-              <button
-                className="btn btn-secondary"
-                disabled={currentIndex === 0}
-                onClick={() => setCurrentIndex((prev) => prev - 1)}
-              >
-                ⬅️ Previous
-              </button>
+          {/* Navigation Buttons */}
+          <div className="d-flex justify-content-between mb-4">
+            <button
+              className="btn btn-outline-secondary px-4"
+              disabled={currentIndex === 0}
+              onClick={() => setCurrentIndex((prev) => prev - 1)}
+            >
+              ⬅️ Previous
+            </button>
 
-              <button
-                className="btn btn-secondary"
-                disabled={currentIndex === questions.length - 1}
-                onClick={() => setCurrentIndex((prev) => prev + 1)}
-              >
-                Next ➡️
-              </button>
-            </div>
+            <button
+              className="btn btn-outline-secondary px-4"
+              disabled={currentIndex === questions.length - 1}
+              onClick={() => setCurrentIndex((prev) => prev + 1)}
+            >
+              Next ➡️
+            </button>
+          </div>
 
-            <div className="text-center mt-4">
-              <button className="btn btn-success" onClick={handleSubmit}>
-                ✅ Submit Exam
-              </button>
-            </div>
+          {/* Submit Button */}
+          <div className="text-center">
+            <button
+              className="btn btn-success px-5 py-2 animate__animated animate__pulse"
+              onClick={handleSubmit}
+            >
+              ✅ Submit Exam
+            </button>
           </div>
         </div>
-      )}
-    </div>
-  );
+      </div>
+    )}
+  </div>
+);
 }
 
 export default AttemptExam;

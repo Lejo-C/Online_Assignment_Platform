@@ -3,10 +3,10 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 import { protect } from '../middleware/authMiddleware.js';
+import Profile from '../models/Profile.js';
 
 const router = express.Router();
 
-// 🔐 Signup route
 router.post('/signup', async (req, res) => {
   const { name, email, password, gender, dob } = req.body;
   console.log('📥 Signup attempt:', email);
@@ -27,6 +27,15 @@ router.post('/signup', async (req, res) => {
     });
 
     await user.save();
+
+    // ✅ Profile creation logic added
+    const profile = new Profile({
+      user: user._id,
+      avatar: '',
+      joined: new Date(),
+    });
+
+    await profile.save();
 
     res.status(201).json({
       message: 'User created successfully',
@@ -80,17 +89,22 @@ router.post('/login', async (req, res) => {
 router.get('/me', protect, async (req, res) => {
   try {
     const { id: _id, name, email, role } = req.user;
-    res.json({ name, email, role: role || 'student' });
+
+    const profile = await Profile.findOne({ user: _id });
+
+    res.json({
+      name,
+      email,
+      role: role || 'student',
+      avatar: profile?.avatar || '',
+      joined: profile?.joined || null,
+    });
   } catch (err) {
     console.error('❌ /me error:', err);
     res.status(500).json({ error: 'Failed to fetch user info' });
   }
 });
 
-// 🚪 Logout route
-router.post('/logout', (req, res) => {
-  res.clearCookie('token');
-  res.json({ message: 'Logged out successfully' });
-});
+
 
 export default router;

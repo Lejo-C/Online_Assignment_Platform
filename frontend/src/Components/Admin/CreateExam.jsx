@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import 'animate.css';
 
 export default function CreateExam() {
   const [examName, setExamName] = useState('');
@@ -21,7 +22,7 @@ export default function CreateExam() {
     try {
       const res = await fetch('http://localhost:5000/api/exams/create', {
         method: 'POST',
-        credentials: 'include', // ✅ This sends the auth cookie
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -50,13 +51,15 @@ export default function CreateExam() {
   };
 
   return (
-    <div className="container mt-5">
-      <div className="card shadow-sm mx-auto" style={{ maxWidth: '600px' }}>
-        <div className="card-body">
-          <h2 className="card-title h4 mb-4 text-center">Create Exam</h2>
+    <div className="container mt-5 animate__animated animate__fadeIn">
+      <div className="card shadow-lg mx-auto animate__animated animate__zoomIn" style={{ maxWidth: '600px' }}>
+        <div className="card-body p-4">
+          <h2 className="card-title h4 mb-4 text-center text-primary animate__animated animate__fadeInDown">
+            📝 Create Exam
+          </h2>
           <form onSubmit={handleCreate}>
             <div className="mb-3">
-              <label className="form-label">Exam Name</label>
+              <label className="form-label fw-semibold">Exam Name</label>
               <input
                 type="text"
                 className="form-control"
@@ -68,7 +71,7 @@ export default function CreateExam() {
             </div>
 
             <div className="mb-3">
-              <label className="form-label">Difficulty Level</label>
+              <label className="form-label fw-semibold">Difficulty Level</label>
               <select
                 className="form-select"
                 value={difficulty}
@@ -83,7 +86,7 @@ export default function CreateExam() {
             </div>
 
             <div className="mb-3">
-              <label className="form-label">Question Type</label>
+              <label className="form-label fw-semibold">Question Type</label>
               <select
                 className="form-select"
                 value={type}
@@ -97,7 +100,7 @@ export default function CreateExam() {
             </div>
 
             <div className="mb-3">
-              <label className="form-label">Schedule Date & Time</label>
+              <label className="form-label fw-semibold">Schedule Date & Time</label>
               <input
                 type="datetime-local"
                 className="form-control"
@@ -108,7 +111,7 @@ export default function CreateExam() {
             </div>
 
             <div className="mb-3">
-              <label className="form-label">Duration (in minutes)</label>
+              <label className="form-label fw-semibold">Duration (in minutes)</label>
               <input
                 type="number"
                 className="form-control"
@@ -119,13 +122,15 @@ export default function CreateExam() {
               />
             </div>
 
-            <button type="submit" className="btn btn-primary w-100">
+            <button type="submit" className="btn btn-primary w-100 animate__animated animate__pulse">
               <i className="bi bi-calendar-plus me-2"></i>
               Create Exam
             </button>
 
             {message && (
-              <div className="mt-3 text-center text-danger small">{message}</div>
+              <div className="mt-3 text-center text-danger small animate__animated animate__fadeInUp">
+                {message}
+              </div>
             )}
           </form>
         </div>

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import 'animate.css';
 
 export default function AssignedExams() {
   const [exams, setExams] = useState([]);
@@ -68,50 +69,57 @@ export default function AssignedExams() {
   };
 
   return (
-    <div className="container mt-4">
-      <h2 className="h4 fw-bold mb-3">Assigned Exams</h2>
-      <table className="table table-bordered table-hover bg-white">
-        <thead className="table-light">
-          <tr>
-            <th>Name</th>
-            <th>Difficulty</th>
-            <th>Type</th>
-            <th>Schedule</th>
-            <th>Duration</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {exams.length > 0 ? (
-            exams.map((exam) => (
-              <tr key={exam._id}>
-                <td>{exam.name}</td>
-                <td>{exam.difficulty}</td>
-                <td>{exam.type}</td>
-                <td>{new Date(exam.schedule).toLocaleString()}</td>
-                <td>{exam.duration} min</td>
-                <td>
-                  <button className="btn btn-sm btn-outline-primary me-2" onClick={() => handleEdit(exam)}>
-                    <i className="bi bi-pencil-square"></i>
-                  </button>
-                  <button className="btn btn-sm btn-outline-danger" onClick={() => handleDelete(exam._id)}>
-                    <i className="bi bi-trash"></i>
-                  </button>
-                </td>
-              </tr>
-            ))
-          ) : (
+    <div className="container mt-4 animate__animated animate__fadeIn">
+      <h2 className="h4 fw-bold mb-3 text-primary animate__animated animate__fadeInDown">📋 Assigned Exams</h2>
+
+      <div className="table-responsive animate__animated animate__fadeInUp">
+        <table className="table table-bordered table-hover bg-white shadow-sm">
+          <thead className="table-primary">
             <tr>
-              <td colSpan="6" className="text-center text-muted">No exams assigned.</td>
+              <th>Name</th>
+              <th>Difficulty</th>
+              <th>Type</th>
+              <th>Schedule</th>
+              <th>Duration</th>
+              <th>Actions</th>
             </tr>
-          )}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {exams.length > 0 ? (
+              exams.map((exam) => (
+                <tr key={exam._id} className="align-middle">
+                  <td>{exam.name}</td>
+                  <td>
+                    <span className={`badge bg-${exam.difficulty === 'Hard' ? 'danger' : exam.difficulty === 'Medium' ? 'warning' : 'success'}`}>
+                      {exam.difficulty}
+                    </span>
+                  </td>
+                  <td>{exam.type}</td>
+                  <td>{new Date(exam.schedule).toLocaleString()}</td>
+                  <td>{exam.duration} min</td>
+                  <td>
+                    <button className="btn btn-sm btn-outline-primary me-2" onClick={() => handleEdit(exam)}>
+                      <i className="bi bi-pencil-square"></i>
+                    </button>
+                    <button className="btn btn-sm btn-outline-danger" onClick={() => handleDelete(exam._id)}>
+                      <i className="bi bi-trash"></i>
+                    </button>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="6" className="text-center text-muted">No exams assigned.</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
 
       {editId && (
-        <div className="card mt-4">
+        <div className="card mt-4 animate__animated animate__fadeInUp">
           <div className="card-body">
-            <h5 className="card-title">Edit Exam</h5>
+            <h5 className="card-title text-success">✏️ Edit Exam</h5>
             <input
               type="text"
               className="form-control mb-2"

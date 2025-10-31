@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { UserCircle } from 'lucide-react';
 
 export default function StudentDashboard() {
   const [name, setName] = useState('');
@@ -9,27 +10,29 @@ export default function StudentDashboard() {
   useEffect(() => {
     const fetchUserAndAttempts = async () => {
       try {
-        // Fetch student name
         const userRes = await fetch('http://localhost:5000/api/auth/me', {
           credentials: 'include',
         });
+
+        if (userRes.status === 401) {
+          navigate('/login'); // ✅ redirect if not authenticated
+          return;
+        }
+
         const userData = await userRes.json();
         if (userRes.ok && userData.name) {
           setName(userData.name);
         }
 
-        // Fetch student's attempt IDs
         const rawRes = await fetch('http://localhost:5000/api/attempts/my', {
           credentials: 'include',
         });
         const rawData = await rawRes.json();
-        console.log('📦 Raw attempts:', rawData);
 
         if (!rawRes.ok || !Array.isArray(rawData)) {
           throw new Error('Invalid attempt data');
         }
 
-        // Fetch full details for each attempt
         const detailedAttempts = await Promise.all(
           rawData
             .filter((a) => a.exam)
@@ -50,68 +53,85 @@ export default function StudentDashboard() {
     };
 
     fetchUserAndAttempts();
-  }, []);
+  }, [navigate]);
 
   return (
-    <div className="d-flex min-vh-100 bg-light">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 flex relative">
       {/* Sidebar */}
-      <aside className="bg-white border-end p-4" style={{ width: '260px' }}>
-        <h2 className="h5 fw-bold mb-4">Student Panel</h2>
-        <div className="d-grid gap-3">
+      <aside className="bg-white border-r shadow-md p-6 w-64 flex-shrink-0">
+        <h2 className="text-xl font-bold text-indigo-700 mb-6">Student Panel</h2>
+        <div className="flex flex-col gap-4">
           <button
             onClick={() => navigate('/exam')}
-            className="btn btn-outline-primary text-start"
+            className="px-4 py-2 bg-indigo-100 text-indigo-700 rounded-lg hover:bg-indigo-200 hover:scale-105 transition-all duration-300 text-left flex items-center gap-2"
           >
-            <i className="bi bi-journal-text me-2"></i>
+            <i className="bi bi-journal-text"></i>
             View Exams
           </button>
         </div>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-grow-1 p-5">
-        <h1 className="display-6 fw-bold mb-3">Welcome, {name || 'Student'}!</h1>
-        <p className="text-muted">Here are your recent exam attempts:</p>
+      <main className="flex-grow p-8">
+        {/* Profile Icon */}
+        <div className="absolute top-4 right-6 z-50">
+          <button
+            onClick={() => navigate('/profile')}
+            className="text-indigo-700 hover:text-indigo-900 hover:scale-105 transition-all duration-300"
+          >
+            <UserCircle className="w-8 h-8" />
+          </button>
+        </div>
+
+        <h1 className="text-3xl font-bold text-gray-800 mb-2 animate-fade-in">
+          Welcome, {name || 'Student'}!
+        </h1>
+        <p className="text-gray-500 mb-6">Here are your recent exam attempts:</p>
 
         {attempts.length === 0 ? (
-          <p>No valid attempts found.</p>
+          <p className="text-gray-600">No valid attempts found.</p>
         ) : (
-          <div className="row">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {attempts.map((attempt) => (
-              <div key={attempt._id} className="col-md-6 mb-4">
-                <div className="card p-3 shadow-sm">
-                  <h5>{attempt.examTitle || 'Untitled Exam'}</h5>
-                  <p className="mb-1">
-                    {attempt.submittedAt
-                      ? `Submitted: ${new Date(attempt.submittedAt).toLocaleString()}`
-                      : 'Not yet submitted'}
-                  </p>
-                  {attempt.submittedAt && (
-                    <div className="mb-2">
-                      <p className="mb-1"><strong>Score:</strong> {attempt.score ?? '-'} / {attempt.totalQuestions ?? '-'}</p>
-                      <p className="mb-1"><strong>Percentage:</strong> {attempt.percentage ?? '-'}%</p>
-                      <p className="mb-1"><strong>Review:</strong> {attempt.review || 'No review provided'}</p>
-                    </div>
-                  )}
-                  <div className="d-flex gap-2">
-                    {attempt.submittedAt ? (
-                      <button
-                        className="btn btn-outline-success"
-                        onClick={() => navigate(`/student/result/${attempt._id}`)}
-                      >
-                        View Result
-                      </button>
-                    ) : (
-                      <button
-                        className="btn btn-outline-warning"
-                        onClick={() =>
-                          navigate(`/student/attempt/${attempt.exam}/${attempt._id}`)
-                        }
-                      >
-                        Continue Exam
-                      </button>
-                    )}
+
+              <div
+                key={attempt._id}
+                className="bg-white rounded-xl shadow-lg p-5 hover:shadow-xl transition-shadow duration-300 border border-gray-100 hover:border-indigo-300"
+              >
+                <h5 className="text-lg font-semibold text-indigo-600 mb-2">
+  {attempt.exam?.name || 'Untitled Exam'}
+</h5>
+
+                <p className="text-sm text-gray-500 mb-2">
+                  {attempt.submittedAt
+                    ? `Submitted: ${new Date(attempt.submittedAt).toLocaleString()}`
+                    : 'Not yet submitted'}
+                </p>
+                {attempt.submittedAt && (
+                  <div className="text-sm text-gray-700 space-y-1 mb-4">
+                    <p><strong>Score:</strong> {attempt.score ?? '-'} / {attempt.totalQuestions ?? '-'}</p>
+                    <p><strong>Percentage:</strong> {attempt.percentage ?? '-'}%</p>
+                    <p><strong>Review:</strong> {attempt.review || 'No review provided'}</p>
                   </div>
+                )}
+                <div className="flex gap-3">
+                  {attempt.submittedAt ? (
+                    <button
+                      className="px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 hover:scale-105 transition-all duration-300"
+                      onClick={() => navigate(`/student/result/${attempt._id}`)}
+                    >
+                      View Result
+                    </button>
+                  ) : (
+                    <button
+                      className="px-4 py-2 bg-yellow-100 text-yellow-700 rounded-lg hover:bg-yellow-200 hover:scale-105 transition-all duration-300"
+                      onClick={() =>
+                        navigate(`/student/attempt/${attempt.exam}/${attempt._id}`)
+                      }
+                    >
+                      Continue Exam
+                    </button>
+                  )}
                 </div>
               </div>
             ))}

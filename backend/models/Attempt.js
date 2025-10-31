@@ -3,16 +3,15 @@ import mongoose from 'mongoose';
 const attemptSchema = new mongoose.Schema(
   {
     student: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-exam: { type: mongoose.Schema.Types.ObjectId, ref: 'Exam', required: true },
-
+    exam: { type: mongoose.Schema.Types.ObjectId, ref: 'Exam', required: true },
 
     answers: [
-  {
-    question: { type: mongoose.Schema.Types.ObjectId, ref: 'Question', required: true },
-    selected: { type: String, required: true },
-    correct: { type: Boolean },
-  },
-],
+      {
+        question: { type: mongoose.Schema.Types.ObjectId, ref: 'Question', required: true },
+        selected: { type: String, required: true },
+        correct: { type: Boolean },
+      },
+    ],
 
 
     // ✅ Result metrics
