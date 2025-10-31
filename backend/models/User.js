@@ -5,7 +5,7 @@ const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
-  role: { type: String, enum: ['student', 'admin', 'proctor'], default: 'student' },
+  role: { type: String, enum: ['student', 'admin'], default: 'student' },
   gender: { type: String, enum: ['male', 'female', 'other'], required: true },
   dob: { type: Date, required: true },
 
@@ -24,5 +24,11 @@ userSchema.pre('save', async function () {
 userSchema.methods.matchPassword = async function (entered) {
   return await bcrypt.compare(entered, this.password);
 };
+
+userSchema.pre('deleteOne', { document: true }, async function (next) {
+  await Incident.deleteMany({ studentId: this._id });
+  next();
+});
+
 
 export default mongoose.model('User', userSchema);

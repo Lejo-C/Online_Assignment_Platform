@@ -3,32 +3,19 @@ import mongoose from 'mongoose';
 import Exam from '../models/Exam.js';
 import Question from '../models/Question.js';
 import Attempt from '../models/Attempt.js';
-import User from '../models/User.js';
 import { protect, isAdmin } from '../middleware/authMiddleware.js';
 import ExamAttempt from '../models/Attempt.js';
 
 const router = express.Router();
 
-// ✅ Get active students currently attempting exams
-router.get('/active-students', async (req, res) => {
-  try {
-    const activeAttempts = await ExamAttempt.find({ submitted: false }).populate('studentId', 'name');
-    const students = activeAttempts.map((attempt) => ({
-      id: attempt.studentId._id,
-      name: attempt.studentId.name,
-    }));
-    res.json(students);
-  } catch (err) {
-    console.error('❌ Error fetching active students:', err);
-    res.status(500).json({ error: 'Failed to fetch active students' });
-  }
-});
+
 
 router.post('/:examId/start', protect, async (req, res) => {
   try {
     const existing = await Attempt.findOne({
       student: req.user._id,
       exam: req.params.examId,
+      startedAt: new Date(),
     });
 
     if (!existing) {
@@ -211,15 +198,23 @@ router.post('/attempts', protect, async (req, res) => {
       return res.status(400).json({ error: 'You have already submitted this exam.' });
     }
 
-    const attempt = new Attempt({ student: studentId, exam: examId });
+    const attempt = new Attempt({
+      student: studentId,
+      exam: examId,
+      startedAt: new Date(), // ✅ Set start time here
+    });
+
     await attempt.save();
 
-    res.json({ attemptId: attempt._id });
+    res.status(201).json({ attemptId: attempt._id });
   } catch (err) {
     console.error('❌ Error creating attempt:', err);
     res.status(500).json({ error: 'Failed to create attempt' });
   }
 });
+
+
+
 
 router.get('/:id/questions', async (req, res) => {
   try {
@@ -227,7 +222,9 @@ router.get('/:id/questions', async (req, res) => {
     if (!exam) {
       return res.status(404).json({ error: 'Exam not found' });
     }
-    res.json({ questions: exam.questions });
+    res.json({ questions: exam.questions,
+      duration: exam.duration,
+     });
   } catch (err) {
     console.error('❌ Error fetching exam questions:', err);
     res.status(500).json({ error: 'Internal server error' });
@@ -235,24 +232,38 @@ router.get('/:id/questions', async (req, res) => {
 });
 
 router.get('/:id', protect, async (req, res) => {
-  
+  const { id } = req.params;
+  const { attemptId } = req.query;
+
   try {
-    const exam = await Exam.findById(req.params.id)
-      .select('name difficulty type schedule duration questions') // ✅ include all needed fields
+    const exam = await Exam.findById(id)
+      .select('name difficulty type schedule duration questions')
       .populate({
-    path: 'questions',
-    select: 'text options correctAnswer category difficulty type',
-  });
+        path: 'questions',
+        select: 'text options correctAnswer category difficulty type',
+      });
 
     if (!exam) return res.status(404).json({ error: 'Exam not found' });
 
-    console.log('📤 Sending exam:', exam); // debug log
-    res.json(exam);
+    let startedAt = null;
+
+    if (attemptId && mongoose.Types.ObjectId.isValid(attemptId)) {
+      const attempt = await Attempt.findById(attemptId).select('startedAt');
+      if (attempt && attempt.startedAt) {
+        startedAt = attempt.startedAt;
+      }
+    }
+
+    res.json({
+      exam,
+      startedAt,
+    });
   } catch (err) {
     console.error('❌ Error fetching exam:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
 
 router.get('/my', protect, async (req, res) => {
   try {
@@ -265,6 +276,33 @@ router.get('/my', protect, async (req, res) => {
   } catch (err) {
     console.error('❌ Error fetching attempts:', err);
     res.status(500).json({ error: 'Failed to load attempts' });
+  }
+});
+
+router.get('/attempts/:id', protect, async (req, res) => {
+  const { id } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ error: 'Invalid attempt ID' });
+  }
+
+  try {
+    const attempt = await Attempt.findById(id).populate('exam');
+    if (!attempt) return res.status(404).json({ error: 'Attempt not found' });
+
+    res.json({
+      _id: attempt._id,
+      examTitle: attempt.exam?.name || 'Deleted Exam',
+      submittedAt: attempt.submittedAt,
+      score: attempt.score,
+      totalQuestions: attempt.totalQuestions,
+      percentage: attempt.percentage,
+      review: attempt.review,
+      exam: attempt.exam?._id,
+    });
+  } catch (err) {
+    console.error('❌ Failed to fetch attempt by ID:', err);
+    res.status(500).json({ error: 'Failed to fetch attempt' });
   }
 });
 

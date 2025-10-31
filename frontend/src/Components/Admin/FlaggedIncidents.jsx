@@ -1,10 +1,8 @@
 import React, { useEffect, useState } from 'react';
 
-export default function FlaggedIncidents() {
+function FlaggedIncidents() {
   const [incidents, setIncidents] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [errorMsg, setErrorMsg] = useState('');
-  const [selectedStudent, setSelectedStudent] = useState('');
+  const [selectedStudent, setSelectedStudent] = useState(null);
 
   useEffect(() => {
     const fetchIncidents = async () => {
@@ -12,14 +10,11 @@ export default function FlaggedIncidents() {
         const res = await fetch('http://localhost:5000/api/incidents', {
           credentials: 'include',
         });
-        if (!res.ok) throw new Error('Failed to fetch incidents');
         const data = await res.json();
-        setIncidents(Array.isArray(data) ? data : []);
+        setIncidents(data);
+        console.log('✅ Incidents loaded:', data.length);
       } catch (err) {
         console.error('❌ Error fetching incidents:', err);
-        setErrorMsg('Unable to load flagged incidents.');
-      } finally {
-        setLoading(false);
       }
     };
 
@@ -27,67 +22,70 @@ export default function FlaggedIncidents() {
   }, []);
 
   // Group incidents by student name
-  const grouped = incidents.reduce((acc, incident) => {
-    const name = incident.studentName;
+  const groupedByStudent = incidents.reduce((acc, incident) => {
+    const name = incident.studentName || incident.studentId?.name || 'Unknown';
     if (!acc[name]) acc[name] = [];
     acc[name].push(incident);
     return acc;
   }, {});
 
   return (
-    <div className="container mt-5">
-      <h2 className="h4 fw-bold mb-4 text-danger text-center">🚨 Flagged Incidents</h2>
+    <div className="container mt-4">
+      <h2>🚨 Flagged Incidents</h2>
 
-      {loading ? (
-        <p className="text-center text-muted">Loading incidents...</p>
-      ) : errorMsg ? (
-        <p className="text-center text-danger">{errorMsg}</p>
-      ) : incidents.length === 0 ? (
-        <p className="text-center text-muted">No violations have been reported.</p>
+      {incidents.length === 0 ? (
+        <p>No incidents found.</p>
       ) : (
-        <>
-          <div className="d-flex flex-wrap gap-3 justify-content-center mb-4">
-            {Object.keys(grouped).map((studentName) => (
-              <div
-                key={studentName}
-                className={`border rounded p-3 text-center shadow-sm ${
-                  selectedStudent === studentName ? 'bg-danger text-white' : 'bg-light'
-                }`}
-                style={{ width: '150px', cursor: 'pointer' }}
-                onClick={() =>
-                  setSelectedStudent((prev) => (prev === studentName ? '' : studentName))
-                }
-              >
-                <strong>{studentName}</strong>
-              </div>
-            ))}
+        <div className="row">
+          {/* Student list */}
+          <div className="col-md-4">
+            <h5>👤 Students</h5>
+            <ul className="list-group">
+              {Object.keys(groupedByStudent).map((name) => (
+                <li
+                  key={name}
+                  className={`list-group-item ${selectedStudent === name ? 'active' : ''}`}
+                  onClick={() => setSelectedStudent(name)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  {name}
+                </li>
+              ))}
+            </ul>
           </div>
 
-          {selectedStudent && (
-            <div className="table-responsive">
-              <h5 className="text-center text-primary mb-3">
-                Incidents for <strong>{selectedStudent}</strong>
-              </h5>
-              <table className="table table-bordered table-hover bg-white">
-                <thead className="table-danger">
-                  <tr>
-                    <th>Violation Type</th>
-                    <th>Timestamp</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {grouped[selectedStudent].map((incident) => (
-                    <tr key={incident._id}>
-                      <td>{incident.type}</td>
-                      <td>{new Date(incident.timestamp).toLocaleString()}</td>
+          {/* Incident table */}
+          <div className="col-md-8">
+            {selectedStudent ? (
+              <>
+                <h5 className="mt-3">📋 Incidents for {selectedStudent}</h5>
+                <table className="table table-striped table-bordered mt-2">
+                  <thead>
+                    <tr>
+                      <th>Exam</th>
+                      <th>Type</th>
+                      <th>Time</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </>
+                  </thead>
+                  <tbody>
+                    {groupedByStudent[selectedStudent].map((i) => (
+                      <tr key={i._id}>
+                        <td>{i.exam?.name || 'Deleted Exam'}</td>
+                        <td>{i.type}</td>
+                        <td>{new Date(i.timestamp).toLocaleString()}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </>
+            ) : (
+              <p className="mt-3">Click a student to view their incidents.</p>
+            )}
+          </div>
+        </div>
       )}
     </div>
   );
 }
+
+export default FlaggedIncidents;

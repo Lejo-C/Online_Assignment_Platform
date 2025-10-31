@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
 const questionSchema = new mongoose.Schema(
   {
-    question: {
+    text: {
       type: String,
       required: [true, 'Question text is required'],
       trim: true,

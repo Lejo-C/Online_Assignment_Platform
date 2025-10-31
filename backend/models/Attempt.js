@@ -2,29 +2,26 @@ import mongoose from 'mongoose';
 
 const attemptSchema = new mongoose.Schema(
   {
-    student: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-      required: true,
-    },
-    exam: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Exam',
-      required: true,
-    },
+    student: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+exam: { type: mongoose.Schema.Types.ObjectId, ref: 'Exam', required: true },
+
+
     answers: [
-      {
-        question: { type: mongoose.Schema.Types.ObjectId, ref: 'Question' },
-        selected: String,
-        correct: Boolean,
-      },
-    ],
+  {
+    question: { type: mongoose.Schema.Types.ObjectId, ref: 'Question', required: true },
+    selected: { type: String, required: true },
+    correct: { type: Boolean },
+  },
+],
+
+
+    // ✅ Result metrics
     score: Number,
     totalQuestions: Number,
     percentage: Number,
     review: String,
 
-    // ✅ Correct feedback structure: array of objects
+    // ✅ Feedback for each question
     feedback: [
       {
         questionId: {
@@ -38,10 +35,14 @@ const attemptSchema = new mongoose.Schema(
       },
     ],
 
+    // ✅ Submission and start tracking
     submittedAt: Date,
-    startedAt: Date,
+    startedAt: {
+      type: Date,
+      default: Date.now, // ✅ Automatically set when attempt is created
+    },
   },
-  { timestamps: true }
+  { timestamps: true } // ✅ Adds createdAt and updatedAt
 );
 
 export default mongoose.model('Attempt', attemptSchema);

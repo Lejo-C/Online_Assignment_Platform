@@ -13,9 +13,9 @@ import AssignedExams from './Components/Admin/AssignedExams.jsx';
 import ExamInstructions from './Components/Student/ExamInstructions.jsx';
 import AttemptExam from './Components/Student/AttemptExam.jsx';
 import ScheduledExams from './Components/Student/ScheduledExams.jsx';
-import FlaggedIncidents from './Components/Admin/FlaggedIncidents.jsx';
-import MonitorStudent from './Components/Admin/MonitorStudent.jsx';
 import ResultPage from './Components/Student/ResultPage.jsx';
+import FlaggedIncidents from './Components/Admin/FlaggedIncidents.jsx';
+import StudentProfile from './Components/Student/StudentProfile.jsx';
 
 function App() {
   const [count, setCount] = useState(0);
@@ -35,10 +35,9 @@ function App() {
         <Route path="/exam/instructions/:examId" element={<ExamInstructions />} />
         <Route path="/student/attempt/:examId/:attemptId" element={<AttemptExam />} />
         <Route path="/exam" element={<ScheduledExams />} />
-        <Route path="/admin/flagged-incidents" element={<FlaggedIncidents />} />
-        <Route path="/admin/monitor-student" element={<MonitorStudent />} />
         <Route path="/student/result/:attemptId" element={<ResultPage />} />
-
+        <Route path="/admin/flagged-incidents" element={<FlaggedIncidents />} />
+        <Route path="/profile" element={<StudentProfile />} />
       </Routes>
     </>
   );

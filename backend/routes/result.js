@@ -5,19 +5,10 @@ import Attempt from '../models/Attempt.js';
 
 const router = express.Router();
 
-// ✅ Get all attempts for logged-in student
-router.get('/my', protect, async (req, res) => {
-  try {
-    const attempts = await Attempt.find({ student: req.user._id }).populate({
-      path: 'exam',
-      select: 'name',
-    });
-    res.json(attempts);
-  } catch (err) {
-    console.error('❌ Error fetching attempts:', err);
-    res.status(500).json({ error: 'Failed to load attempts' });
-  }
-});
+function getExplanationForQuestion(question) {
+  return question?.explanation || 'No explanation available.';
+}
+
 
 // ✅ Get result for a specific attempt
 router.get('/:id', protect, async (req, res) => {
@@ -30,14 +21,37 @@ router.get('/:id', protect, async (req, res) => {
   try {
     const attempt = await Attempt.findById(id).populate({
       path: 'exam',
-      select: 'name',
+      populate: {
+        path: 'questions',
+        select: 'text options correctAnswer explanation',
+      },
     });
 
-    if (!attempt) return res.status(404).json({ error: 'Attempt not found' });
+    if (!attempt) {
+      return res.status(404).json({ error: 'Attempt not found' });
+    }
 
     if (attempt.student.toString() !== req.user._id.toString()) {
       return res.status(403).json({ error: 'Unauthorized access to result' });
     }
+
+    // ✅ Enrich feedback with question data
+    const enrichedFeedback = attempt.feedback.map((item) => {
+      const question = Array.isArray(attempt.exam.questions)
+        ? attempt.exam.questions.find((q) =>
+            q._id.toString() === item.questionId.toString()
+          )
+        : null;
+
+      return {
+        questionId: item.questionId,
+        questionText: question?.text || 'Question text not available',
+        studentAnswer: item.studentAnswer || '—',
+        correctAnswer: question?.correctAnswer || '',
+        isCorrect: item.studentAnswer === question?.correctAnswer,
+        explanation: getExplanationForQuestion(question),
+      };
+    });
 
     res.json({
       _id: attempt._id,
@@ -48,7 +62,7 @@ router.get('/:id', protect, async (req, res) => {
       percentage: attempt.percentage,
       review: attempt.review,
       submittedAt: attempt.submittedAt,
-      feedback: attempt.feedback,
+      feedback: enrichedFeedback,
     });
   } catch (err) {
     console.error('❌ Error fetching attempt result:', err);
@@ -70,5 +84,7 @@ router.post('/', protect, async (req, res) => {
     res.status(500).json({ error: 'Failed to create attempt' });
   }
 });
+
+
 
 export default router;

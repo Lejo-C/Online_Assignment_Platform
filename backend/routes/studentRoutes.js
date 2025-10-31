@@ -5,93 +5,72 @@ import { protect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-function getExplanationForQuestion(question) {
-  // Later you can pull this from question.explanation or a database
-  // For now, return a placeholder
-  return 'Review this concept in your notes or textbook.';
-}
 
 // 📝 Submit exam, auto-grade, and generate review
-router.get('/:id/questions', protect, async (req, res) => {
-  try {
-    console.log('📥 Fetching questions for exam:', req.params.id);
-
-    const exam = await Exam.findById(req.params.id).populate('questions');
-    if (!exam) {
-      console.warn('⚠️ Exam not found');
-      return res.status(404).json({ error: 'Exam not found' });
-    }
-
-    // ✅ Check if the student already submitted this exam
-    const attempt = await Attempt.findOne({
-  exam: req.params.id,
-  student: req.user.id, // or req.user._id depending on your middleware
-  submittedAt: { $ne: null },
-});
-
-if (attempt) {
-  return res.status(403).json({ error: 'Exam already submitted' });
-}
-
-
-    console.log('✅ Exam found:', exam.name);
-    res.json({ questions: exam.questions });
-  } catch (err) {
-    console.error('❌ Error fetching exam questions:', err);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-
 router.post('/attempts/:id/submit', protect, async (req, res) => {
   try {
     const attempt = await Attempt.findById(req.params.id)
-  .populate({
-  path: 'exam',
-  populate: {
-    path: 'questions',
-    select: 'text correctAnswer explanation', // ✅ must include 'explanation'
-    options: { strictPopulate: false },
-  },
-});
+      .populate({
+        path: 'exam',
+        populate: {
+          path: 'questions',
+          select: 'question correctAnswer explanation', // ✅ must include 'explanation'
+          options: { strictPopulate: false },
+        },
+      });
 
 
     if (!attempt || !attempt.exam)
       return res.status(404).json({ error: "Attempt or exam not found" });
 
-    const { answers = {} } = req.body;
+    const answersMap = {};
+    for (const a of attempt.answers) {
+      answersMap[a.question.toString()] = a.selected;
+    }
+
     let score = 0;
     const feedback = [];
-for (const q of attempt.exam.questions) {
-  const qid = q._id.toString();
-  const studentAnswer = answers[qid];
-  const correctAnswer = q.correctAnswer;
+    const answerRecords = [];
 
-  const normalizedStudent = typeof studentAnswer === 'string'
-    ? studentAnswer.trim().toLowerCase()
-    : '';
-  const normalizedCorrect = typeof correctAnswer === 'string'
-    ? correctAnswer.trim().toLowerCase()
-    : '';
+    for (const q of attempt.exam.questions) {
+      const qid = q._id.toString();
+      const studentAnswer = answersMap[qid];
+      const correctAnswer = q.correctAnswer;
 
-  const isCorrect = normalizedStudent === normalizedCorrect;
+      const normalizedStudent = typeof studentAnswer === 'string'
+        ? studentAnswer.trim().toLowerCase()
+        : '';
+      const normalizedCorrect = typeof correctAnswer === 'string'
+        ? correctAnswer.trim().toLowerCase()
+        : '';
 
-  // ✅ Add explanation if incorrect
-  let explanation = '';
-if (isCorrect) {
-  score++;
-} else {
-  explanation = q.explanation || 'Review this concept in your notes or textbook.';
-}
+      const isCorrect = normalizedStudent === normalizedCorrect;
 
-  feedback.push({
-  questionId: qid,
-  questionText: q.question,
-  studentAnswer,
-  correctAnswer,
-  isCorrect,
-  explanation, // ✅ must be included here
-});
+      console.log(`🧠 q.question for ${qid}:`, q.question);
+      console.log(`🧠 q.explanation for ${qid}:`, q.explanation);
+
+      // ✅ Add explanation if incorrect
+      let explanation = '';
+      if (!isCorrect) {
+        explanation = q.explanation?.trim() || 'Review this concept in your notes or textbook.';
+      } else {
+        score += 1;
+      }
+
+      answerRecords.push({
+        question: q._id,
+        selected: studentAnswer,
+        correct: isCorrect,
+      });
+
+      feedback.push({
+        questionId: qid,
+        questionText: q.question,
+        studentAnswer,
+        correctAnswer,
+        isCorrect,
+        explanation, // ✅ must be here
+      });
 
 
 
@@ -111,15 +90,16 @@ if (isCorrect) {
     else if (percentage >= 40) review = '📘 Keep practicing!';
 
     attempt.score = score;
-attempt.totalQuestions = total;
-attempt.percentage = Math.round(percentage);
-attempt.review = review;
-attempt.feedback = feedback;
-attempt.submittedAt = new Date();
-console.log('🧠 Final feedback:', feedback);
+    attempt.totalQuestions = total;
+    attempt.percentage = Math.round(percentage);
+    attempt.review = review;
+    attempt.feedback = feedback;
+    attempt.submittedAt = new Date();
+    console.log('🧠 Final feedback:', feedback);
 
-attempt.feedback = feedback;
-await attempt.save();
+    attempt.feedback = feedback;
+    console.log('🧠 Final feedback before save:', feedback);
+    await attempt.save();
 
 
     return res.json({
@@ -135,6 +115,8 @@ await attempt.save();
   }
 });
 
+
+
 router.post('/exams/:examId/start', protect, async (req, res) => {
   try {
     const { examId } = req.params;
@@ -142,7 +124,7 @@ router.post('/exams/:examId/start', protect, async (req, res) => {
 
     // Check if there is an ongoing attempt that is not submitted yet
     let attempt = await Attempt.findOne({ exam: examId, student: studentId, submittedAt: null });
-    
+
     if (!attempt) {
       // Create a new attempt document
       attempt = new Attempt({
@@ -153,16 +135,16 @@ router.post('/exams/:examId/start', protect, async (req, res) => {
     }
 
     const existing = await Attempt.findOne({
-  exam: examId,
-  student: studentId,
-  submittedAt: { $ne: null },
-});
+      exam: examId,
+      student: studentId,
+      submittedAt: { $ne: null },
+    });
 
-if (existing) {
-  return res.status(403).json({ error: 'Exam already submitted' });
-}
+    if (existing) {
+      return res.status(403).json({ error: 'Exam already submitted' });
+    }
 
-    
+
     res.json({ attemptId: attempt._id });
   } catch (err) {
     console.error('❌ Error starting exam:', err);
@@ -170,7 +152,58 @@ if (existing) {
   }
 });
 
+router.post('/attempts/:attemptId/answer', protect, async (req, res) => {
+  const { attemptId } = req.params;
+  const { questionId, selected } = req.body;
 
+  try {
+    const attempt = await Attempt.findById(attemptId);
+    if (!attempt) return res.status(404).json({ error: 'Attempt not found' });
 
+    const existing = attempt.answers.find(
+      (a) => a.question.toString() === questionId
+    );
+
+    if (existing) {
+      existing.selected = selected;
+    } else {
+      attempt.answers.push({
+        question: questionId,
+        selected,
+        correct: null,
+      });
+    }
+
+    attempt.markModified('answers');
+    await attempt.save();
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('❌ Failed to save answer:', err);
+    res.status(500).json({ error: 'Failed to save answer' });
+  }
+});
+
+router.get('/attempts/my', protect, async (req, res) => {
+  try {
+    const attempts = await Attempt.find({ student: req.user._id }).populate('exam');
+    res.json(attempts);
+  } catch (err) {
+    console.error('❌ Failed to fetch attempt:', err);
+    res.status(500).json({ error: 'Failed to fetch attempt' });
+  }
+});
+
+router.get('/attempts/:id', protect, async (req, res) => {
+  try {
+    const attempt = await Attempt.findById(req.params.id).populate('answers.question');
+    if (!attempt) return res.status(404).json({ error: 'Attempt not found' });
+
+    res.json(attempt);
+  } catch (err) {
+    console.error('❌ Failed to fetch attempt:', err);
+    res.status(500).json({ error: 'Failed to fetch attempt' });
+  }
+});
 
 export default router;

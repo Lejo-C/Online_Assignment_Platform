@@ -1,120 +1,294 @@
-import React, { useEffect, useState} from 'react';
-import { useParams } from 'react-router-dom';
-import { useNavigate } from 'react-router-dom';
-
+import React, { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 
 function AttemptExam() {
   const { examId, attemptId } = useParams();
+  const navigate = useNavigate();
+
   const [questions, setQuestions] = useState([]);
   const [selectedAnswers, setSelectedAnswers] = useState({});
-  const [result, setResult] = useState(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [visited, setVisited] = useState(new Set());
+  const [duration, setDuration] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const navigate = useNavigate();
-  console.log('Exam ID:', examId);
+  const [started, setStarted] = useState(false);
 
-  
-  useEffect(() => {
-    if (!examId) return;
-
-    fetch(`http://localhost:5000/api/exams/${examId}/questions`, {
-      credentials: 'include',
-    })
-      .then(async (res) => {
-        if (!res.ok) throw new Error('Failed to fetch questions');
-        const data = await res.json();
-        setQuestions(data.questions);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error('❌ Error loading questions:', err);
-        setError('Failed to load exam questions.');
-        setLoading(false);
-      });
-  }, [examId]);
-
-  useEffect(() => {
-  const fetchQuestions = async () => {
+  const logIncident = async (type) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/exams/${examId}/questions`, {
+      await fetch('http://localhost:5000/api/incidents/report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
+        body: JSON.stringify({
+          type,
+          timestamp: new Date().toISOString(),
+          examId,
+        }),
       });
-      const data = await res.json();
-
-      if (!res.ok && data.error === 'Exam already submitted') {
-        navigate('/student/dashboard', { replace: true }); // ✅ redirect instead of showing instruction
-        return;
-      }
-
-      setQuestions(data.questions);
     } catch (err) {
-      console.error('❌ Error loading exam:', err);
+      console.error('❌ Failed to log incident:', err);
     }
   };
 
-  fetchQuestions();
-}, []);
+  const handleStartExam = async () => {
+    try {
+      await document.documentElement.requestFullscreen();
+      setStarted(true);
+    } catch (err) {
+      console.warn('❌ Fullscreen request failed:', err);
+    }
+  };
 
-
-
-const handleSubmit = async () => {
-  try {
-    // ✅ Prepare answers as { [questionId]: selectedAnswer }
-    const answers = {};
-    questions.forEach((q) => {
-      answers[q._id] = selectedAnswers[q._id] || '';
-    });
-
-    // ✅ Submit to backend
-    const res = await fetch(`http://localhost:5000/api/attempts/${attemptId}/submit`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+  useEffect(() => {
+    fetch(`http://localhost:5000/api/exams/${examId}?attemptId=${attemptId}`, {
       credentials: 'include',
-      body: JSON.stringify({ answers }),
-    });
+    })
+      .then(async (res) => {
+        if (!res.ok) throw new Error('Failed to fetch exam');
+        const data = await res.json();
 
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Submission failed');
+        const durationMinutes = data.exam.duration || 30;
+        setQuestions(data.exam.questions);
+        setDuration(durationMinutes);
 
-    console.log('✅ Submission successful:', data);
+        if (!data.startedAt) {
+          setError('Exam start time missing.');
+          return;
+        }
 
-    // ✅ Redirect to result page
-    navigate(`/student/result/${attemptId}`, { replace: true });
-  } catch (err) {
-    console.error('❌ Submission failed:', err);
-    alert('Something went wrong while submitting. Please try again.');
-  }
-};
+        const startedAt = new Date(data.startedAt).getTime();
+        const now = Date.now();
+        const elapsed = Math.floor((now - startedAt) / 1000);
+        const remaining = durationMinutes * 60 - elapsed;
+
+        if (remaining <= 0) {
+          alert('⏰ Time is already up. Redirecting to result.');
+          navigate(`/student/result/${attemptId}`, { replace: true });
+          return;
+        }
+
+        setTimeLeft(remaining);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error('❌ Error loading exam:', err);
+        setError('Failed to load exam.');
+        setLoading(false);
+      });
+  }, [examId, attemptId]);
+
+  useEffect(() => {
+    if (timeLeft <= 0) return;
+
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          alert('⏰ Time is up! Submitting your exam.');
+          handleSubmit();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [timeLeft]);
+
+  useEffect(() => {
+    setVisited((prev) => new Set(prev).add(currentIndex));
+  }, [currentIndex]);
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        alert('⚠️ Tab switch detected. This has been flagged.');
+        logIncident('tab-switch');
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      if (!document.fullscreenElement) {
+        alert('⚠️ You exited fullscreen. This has been flagged.');
+        logIncident('fullscreen-exit');
+      }
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleContextMenu = (e) => {
+      e.preventDefault();
+      alert('⚠️ Right-click is disabled. This has been flagged.');
+      logIncident('right-click');
+    };
+    document.addEventListener('contextmenu', handleContextMenu);
+    return () => {
+      document.removeEventListener('contextmenu', handleContextMenu);
+    };
+  }, []);
+
+  useEffect(() => {
+    const fetchAttempt = async () => {
+      try {
+        const res = await fetch(`http://localhost:5000/api/attempts/${attemptId}`, {
+          credentials: 'include',
+        });
+        const data = await res.json();
+
+        const initialAnswers = {};
+for (const a of data.answers || []) {
+  initialAnswers[a.question.toString()] = a.selected;
+}
+setSelectedAnswers(initialAnswers);
+console.log('🧠 Preloaded answers:', initialAnswers);
+      } catch (err) {
+        console.error('❌ Failed to load attempt:', err);
+      }
+    };
+
+    fetchAttempt();
+  }, [attemptId]);
+
+  const handleAnswerChange = async (qid, answer) => {
+    setSelectedAnswers((prev) => ({ ...prev, [qid]: answer }));
+
+    try {
+      const res = await fetch(`http://localhost:5000/api/attempts/${attemptId}/answer`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ questionId: qid, selected: answer }),
+      });
+
+      const data = await res.json();
+      console.log('✅ Answer saved:', data);
+    } catch (err) {
+      console.error('❌ Failed to save answer:', err);
+    }
+  };
+
+  const handleSubmit = async () => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/attempts/${attemptId}/submit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Submission failed');
+
+      navigate(`/student/result/${attemptId}`, { replace: true });
+    } catch (err) {
+      console.error('❌ Submission failed:', err);
+      alert('Something went wrong while submitting. Please try again.');
+    }
+  };
+
+  const currentQuestion = questions[currentIndex];
+  const formatTime = (secs) => {
+    const min = Math.floor(secs / 60);
+    const sec = secs % 60;
+    return `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+  };
 
 
   return (
-    <div>
-      <h2>📝 Attempt Exam</h2>
-      {questions.map((q) => (
-        <div key={q._id} style={{ marginBottom: '1rem' }}>
-          <p><strong>{q.text}</strong></p>
-          {q.options.map((opt, i) => (
-            <label key={i} style={{ display: 'block', marginLeft: '1rem' }}>
-              <input
-                type="radio"
-                name={`question-${q._id}`}
-                value={opt}
-                checked={selectedAnswers[q._id] === opt}
-                onChange={() =>
-                  setSelectedAnswers((prev) => ({
-                    ...prev,
-                    [q._id]: opt,
-                  }))
-                }
-              />
-              {opt}
-            </label>
-          ))}
+    <div className="container mt-4">
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <h2>📝 Attempt Exam</h2>
+        <div className="badge bg-warning text-dark fs-5">
+          ⏳ Time Left: {formatTime(timeLeft)}
         </div>
-      ))}
-      <button onClick={handleSubmit}>Submit Exam</button>
+      </div>
+
+      {loading ? (
+        <p>Loading questions...</p>
+      ) : error ? (
+        <p className="text-danger">{error}</p>
+      ) : (
+        <div className="d-flex">
+          <div style={{ minWidth: '80px' }}>
+            {questions.map((q, i) => {
+              const isVisited = visited.has(i);
+              const isAnswered = selectedAnswers[q._id];
+
+              let btnClass = 'btn-outline-light';
+              if (isAnswered) btnClass = 'btn-success';
+              else if (isVisited) btnClass = 'btn-danger';
+
+              return (
+                <button
+                  key={q._id}
+                  className={`btn btn-sm mb-2 w-100 ${btnClass} ${i === currentIndex ? 'border border-3 border-dark' : ''}`}
+                  onClick={() => setCurrentIndex(i)}
+                >
+                  {i + 1}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="flex-grow-1 ms-4">
+            <div className="card p-3 mb-3 shadow-sm">
+              <h5>Question {currentIndex + 1} of {questions.length}</h5>
+              {currentQuestion ? (
+                <>
+                  <p><strong>{currentQuestion.text}</strong></p>
+                  {currentQuestion.options.map((opt, i) => (
+                    <label key={i} className="d-block ms-3">
+                      <input
+                        type="radio"
+                        name={`question-${currentQuestion._id}`}
+                        checked={selectedAnswers[currentQuestion._id.toString()] === opt}
+                        onChange={() => handleAnswerChange(currentQuestion._id, opt)}
+                      />{' '}
+                      {opt}
+                    </label>
+                  ))}
+                </>
+              ) : (
+                <p className="text-danger">❌ Question not found.</p>
+              )}
+            </div>
+
+            <div className="d-flex justify-content-between">
+              <button
+                className="btn btn-secondary"
+                disabled={currentIndex === 0}
+                onClick={() => setCurrentIndex((prev) => prev - 1)}
+              >
+                ⬅️ Previous
+              </button>
+
+              <button
+                className="btn btn-secondary"
+                disabled={currentIndex === questions.length - 1}
+                onClick={() => setCurrentIndex((prev) => prev + 1)}
+              >
+                Next ➡️
+              </button>
+            </div>
+
+            <div className="text-center mt-4">
+              <button className="btn btn-success" onClick={handleSubmit}>
+                ✅ Submit Exam
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -32,7 +32,7 @@ export default function StudentDashboard() {
         // Fetch full details for each attempt
         const detailedAttempts = await Promise.all(
           rawData
-            .filter((a) => a.exam) // ✅ filter out deleted exams
+            .filter((a) => a.exam)
             .map(async (a) => {
               const res = await fetch(`http://localhost:5000/api/attempts/${a._id}`, {
                 credentials: 'include',
@@ -42,7 +42,7 @@ export default function StudentDashboard() {
             })
         );
 
-        const valid = detailedAttempts.filter((a) => a && a.examTitle);
+        const valid = detailedAttempts.filter((a) => a !== null);
         setAttempts(valid);
       } catch (err) {
         console.error('❌ Error loading dashboard:', err);
@@ -80,18 +80,18 @@ export default function StudentDashboard() {
             {attempts.map((attempt) => (
               <div key={attempt._id} className="col-md-6 mb-4">
                 <div className="card p-3 shadow-sm">
-                  <h5>{attempt.examTitle}</h5>
-                  <p>
+                  <h5>{attempt.examTitle || 'Untitled Exam'}</h5>
+                  <p className="mb-1">
                     {attempt.submittedAt
                       ? `Submitted: ${new Date(attempt.submittedAt).toLocaleString()}`
                       : 'Not yet submitted'}
                   </p>
                   {attempt.submittedAt && (
-                    <p>
-                      <strong>Score:</strong> {attempt.score} / {attempt.totalQuestions}<br />
-                      <strong>Percentage:</strong> {attempt.percentage}%<br />
-                      <strong>Review:</strong> {attempt.review}
-                    </p>
+                    <div className="mb-2">
+                      <p className="mb-1"><strong>Score:</strong> {attempt.score ?? '-'} / {attempt.totalQuestions ?? '-'}</p>
+                      <p className="mb-1"><strong>Percentage:</strong> {attempt.percentage ?? '-'}%</p>
+                      <p className="mb-1"><strong>Review:</strong> {attempt.review || 'No review provided'}</p>
+                    </div>
                   )}
                   <div className="d-flex gap-2">
                     {attempt.submittedAt ? (

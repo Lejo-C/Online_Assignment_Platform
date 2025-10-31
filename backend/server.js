@@ -6,11 +6,13 @@ import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 import passwordRoutes from './routes/passwordRoutes.js';
 import examRoutes from './routes/examRoutes.js';
-import incidentRoutes from './routes/incidentRoutes.js';
 import { Server } from 'socket.io';
 import http from 'http';
 import studentRoutes from './routes/studentRoutes.js';
 import resultRoutes from './routes/result.js';
+import incidentRoutes from './routes/incidentRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
+
 dotenv.config();
 
 const app = express();
@@ -60,9 +62,11 @@ app.use((err, req, res, next) => {
   console.error('❌ Server error:', err.stack);
   res.status(500).json({ error: 'Internal server error' });
 });
-app.use('/api/incidents', incidentRoutes);
 app.use('/api', studentRoutes);
 app.use('/api/attempts', resultRoutes);
+app.use('/api/incidents', incidentRoutes);
+app.use('/api/admin', adminRoutes);
+
 
 server.listen(process.env.PORT || 5000, () => {
   console.log(`✅ Server running on http://localhost:${process.env.PORT || 5000}`);
