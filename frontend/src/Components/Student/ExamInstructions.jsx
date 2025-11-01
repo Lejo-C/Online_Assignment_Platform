@@ -15,7 +15,7 @@ function ExamInstructions() {
     })
       .then(res => res.json())
       .then(data => {
-        console.log('📥 Received exam:', data);
+        
         setExam(data.exam);
       })
       .catch(err => {

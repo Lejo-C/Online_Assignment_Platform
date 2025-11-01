@@ -57,9 +57,9 @@ router.post('/reset/:token', async (req, res) => {
   user.resetToken = undefined;
   user.resetTokenExpiry = undefined;
 
-  console.log('🔐 Saving new password...');
+  
   await user.save();
-  console.log('✅ Password saved');
+  
 
   res.json({ message: 'Password reset successful' });
 });

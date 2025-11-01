@@ -23,7 +23,7 @@ router.put('/update', protect, upload.single('avatar'), async (req, res) => {
     let profile = await Profile.findOne({ user: req.user._id });
     if (!profile) {
       profile = await Profile.create({ user: req.user._id });
-      console.log('🆕 Created missing profile');
+      
     }
 
     if (req.file) {

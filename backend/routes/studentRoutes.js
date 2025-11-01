@@ -8,7 +8,7 @@ const router = express.Router();
 
 // 📝 Submit exam, auto-grade, and generate review
 router.post('/attempts/:id/submit', protect, async (req, res) => {
-  console.log('📨 Submission triggered for attempt:', req.params.id);
+  
   try {
     const attempt = await Attempt.findById(req.params.id)
       .populate({
@@ -49,8 +49,7 @@ router.post('/attempts/:id/submit', protect, async (req, res) => {
 
       const isCorrect = normalizedStudent === normalizedCorrect;
 
-      console.log(`🧠 q.question for ${qid}:`, q.question);
-      console.log(`🧠 q.explanation for ${qid}:`, q.explanation);
+      
 
       // ✅ Add explanation if incorrect
       let explanation = '';
@@ -77,10 +76,7 @@ router.post('/attempts/:id/submit', protect, async (req, res) => {
 
 
 
-      console.log(`🧩 Question: ${q.text}`);
-      console.log(`   Student: "${normalizedStudent}"`);
-      console.log(`   Correct: "${normalizedCorrect}"`);
-      console.log(`   Match: ${isCorrect}`);
+      
     }
 
     const total = attempt.exam.questions.length;
@@ -98,10 +94,10 @@ router.post('/attempts/:id/submit', protect, async (req, res) => {
     attempt.review = review;
     attempt.feedback = feedback;
     attempt.submittedAt = new Date();
-    console.log('🧠 Final feedback:', feedback);
+    
 
     attempt.feedback = feedback;
-    console.log('🧠 Final feedback before save:', feedback);
+    
     await attempt.save();
 
 
@@ -203,7 +199,7 @@ router.get('/attempts/:id', protect, async (req, res) => {
   try {
     const attempt = await Attempt.findById(id).populate({ path: 'exam', select: 'name' });
     if (!attempt) return res.status(404).json({ error: 'Attempt not found' });
-    console.log('🧪 Populated attempt:', attempt);
+    
     res.json({ 
       _id: attempt._id,
       examTitle: attempt.exam?.name || 'Deleted Exam',

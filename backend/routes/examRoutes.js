@@ -25,9 +25,7 @@ router.post('/:examId/start', protect, async (req, res) => {
         submitted: false,
       });
       await attempt.save();
-      console.log(`🚀 Created attempt for student ${req.user._id}`);
-    } else {
-      console.log(`🔄 Attempt already exists for student ${req.user._id}`);
+      
     }
 
     res.json({ message: 'Exam attempt initialized' });

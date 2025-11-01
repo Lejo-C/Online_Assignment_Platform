@@ -151,7 +151,7 @@ for (const a of data.answers || []) {
   initialAnswers[a.question.toString()] = a.selected;
 }
 setSelectedAnswers(initialAnswers);
-console.log('🧠 Preloaded answers:', initialAnswers);
+
       } catch (err) {
         console.error('❌ Failed to load attempt:', err);
       }
@@ -172,7 +172,7 @@ console.log('🧠 Preloaded answers:', initialAnswers);
       });
 
       const data = await res.json();
-      console.log('✅ Answer saved:', data);
+      
     } catch (err) {
       console.error('❌ Failed to save answer:', err);
     }

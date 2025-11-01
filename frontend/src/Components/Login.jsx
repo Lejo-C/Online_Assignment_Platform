@@ -19,11 +19,11 @@ export default function Login() {
       });
 
       const data = await res.json();
-      console.log('📥 Login response:', data);
+      
 
       if (res.ok && data.user) {
         const role = data.user.role || 'student';
-        console.log('✅ Login successful, role:', role);
+        
 
         if (role === 'admin') {
           navigate('/adminDashboard');
@@ -31,7 +31,7 @@ export default function Login() {
           navigate('/studentDashboard');
         }
       } else {
-        console.log('❌ Login failed:', data.error);
+        
         setMessage(data.error || 'Login failed');
       }
     } catch (err) {

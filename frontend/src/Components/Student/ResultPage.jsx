@@ -19,8 +19,7 @@ export default function ResultPage() {
           throw new Error(errData.error || 'Failed to fetch result');
         }
         const data = await res.json();
-        console.log('📦 Received result:', data);
-        console.log('🧠 Feedback item 0:', data.feedback?.[0]);
+      
         setResult(data);
       })
       .catch((err) => {

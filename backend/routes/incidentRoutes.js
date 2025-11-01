@@ -8,7 +8,7 @@ const router = express.Router();
 // ✅ Log incident
 router.post('/report', protect, async (req, res) => {
   const { type, timestamp, examId } = req.body;
-  console.log('📥 Received incident:', { type, timestamp, examId });
+  
 
   const studentId = req.user._id;
   const studentName = req.user.name;
@@ -27,7 +27,7 @@ router.post('/report', protect, async (req, res) => {
     });
 
     await incident.save();
-    console.log('✅ Incident saved:', incident);
+    
     res.status(201).json({ message: 'Violation logged' });
   } catch (err) {
     console.error('❌ Error logging incident:', err.message);

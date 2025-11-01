@@ -9,7 +9,7 @@ const router = express.Router();
 
 router.post('/signup', async (req, res) => {
   const { name, email, password, gender, dob } = req.body;
-  console.log('📥 Signup attempt:', email);
+  
 
   try {
     const existingUser = await User.findOne({ email: email.trim().toLowerCase() });
@@ -52,7 +52,7 @@ router.post('/login', async (req, res) => {
   try {
     const email = (req.body.email || '').trim().toLowerCase();
     const password = (req.body.password || '').trim();
-    console.log('🔐 Login attempt:', email);
+    
 
     const user = await User.findOne({ email });
     if (!user) return res.status(401).json({ error: 'Invalid credentials' });

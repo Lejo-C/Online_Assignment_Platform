@@ -13,7 +13,7 @@ function FlaggedIncidents() {
         });
         const data = await res.json();
         setIncidents(data);
-        console.log('✅ Incidents loaded:', data.length);
+        
       } catch (err) {
         console.error('❌ Error fetching incidents:', err);
       }
