@@ -300,11 +300,11 @@ const questions = [
 async function seedDB() {
   try {
     await mongoose.connect(process.env.MONGO_URI);
-    
+    console.log('✅ MongoDB connected');
 
     await Question.deleteMany(); // Optional: clear existing
     await Question.insertMany(questions);
-   
+    console.log(`✅ Seeded ${questions.length} questions`);
 
     mongoose.connection.close();
   } catch (err) {

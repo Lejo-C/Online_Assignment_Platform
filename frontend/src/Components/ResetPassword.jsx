@@ -12,7 +12,7 @@ export default function ResetPassword() {
 
   useEffect(() => {
     const verifyToken = async () => {
-      const res = await fetch(`http://localhost:5000/api/password/verify/${token}`);
+      const res = await fetch(`/api/password/verify/${token}`);
       const data = await res.json();
       setValid(res.ok);
       setMessage(data.message || data.error);
@@ -23,7 +23,7 @@ export default function ResetPassword() {
   const handleReset = async (e) => {
   e.preventDefault();
   try {
-    const res = await fetch(`http://localhost:5000/api/password/reset/${token}`, {
+    const res = await fetch(`/api/password/reset/${token}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ password }),

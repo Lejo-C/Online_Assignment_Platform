@@ -32,7 +32,7 @@ export default function AssignedExams() {
 
   const handleDelete = async (id) => {
     try {
-      await fetch(`http://localhost:5000/api/exams/delete/${id}`, {
+      await fetch(`/api/exams/delete/${id}`, {
         method: 'DELETE',
         credentials: 'include',
       });
@@ -55,7 +55,7 @@ export default function AssignedExams() {
 
   const handleUpdate = async () => {
     try {
-      await fetch(`http://localhost:5000/api/exams/update/${editId}`, {
+      await fetch(`/api/exams/update/${editId}`, {
         method: 'PUT',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },

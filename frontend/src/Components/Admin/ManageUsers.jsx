@@ -28,7 +28,7 @@ export default function ViewStudents() {
     if (!window.confirm('Are you sure you want to delete this student?')) return;
 
     try {
-      const res = await fetch(`http://localhost:5000/api/admin/users/${id}`, {
+      const res = await fetch(`/api/admin/users/${id}`, {
         method: 'DELETE',
         credentials: 'include',
       });

@@ -37,7 +37,7 @@ export default function StudentDashboard() {
           rawData
             .filter((a) => a.exam)
             .map(async (a) => {
-              const res = await fetch(`http://localhost:5000/api/attempts/${a._id}`, {
+              const res = await fetch(`/api/attempts/${a._id}`, {
                 credentials: 'include',
               });
               const data = await res.json();

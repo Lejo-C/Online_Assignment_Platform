@@ -10,7 +10,7 @@ export default function ResultPage() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    fetch(`http://localhost:5000/api/attempts/${attemptId}`, {
+    fetch(`/api/attempts/${attemptId}`, {
       credentials: 'include',
     })
       .then(async (res) => {

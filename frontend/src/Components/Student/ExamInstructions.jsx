@@ -10,7 +10,7 @@ function ExamInstructions() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    fetch(`http://localhost:5000/api/exams/${examId}`, {
+    fetch(`/api/exams/${examId}`, {
       credentials: 'include',
     })
       .then(res => res.json())

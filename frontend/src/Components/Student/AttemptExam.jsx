@@ -42,7 +42,7 @@ function AttemptExam() {
   };
 
   useEffect(() => {
-    fetch(`http://localhost:5000/api/exams/${examId}?attemptId=${attemptId}`, {
+    fetch(`/api/exams/${examId}?attemptId=${attemptId}`, {
       credentials: 'include',
     })
       .then(async (res) => {
@@ -141,7 +141,7 @@ function AttemptExam() {
   useEffect(() => {
     const fetchAttempt = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/attempts/${attemptId}`, {
+        const res = await fetch(`/api/attempts/${attemptId}`, {
           credentials: 'include',
         });
         const data = await res.json();
@@ -164,7 +164,7 @@ setSelectedAnswers(initialAnswers);
     setSelectedAnswers((prev) => ({ ...prev, [qid]: answer }));
 
     try {
-      const res = await fetch(`http://localhost:5000/api/attempts/${attemptId}/answer`, {
+      const res = await fetch(`/api/attempts/${attemptId}/answer`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -180,7 +180,7 @@ setSelectedAnswers(initialAnswers);
 
   const handleSubmit = async () => {
     try {
-      const res = await fetch(`http://localhost:5000/api/attempts/${attemptId}/submit`, {
+      const res = await fetch(`/api/attempts/${attemptId}/submit`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

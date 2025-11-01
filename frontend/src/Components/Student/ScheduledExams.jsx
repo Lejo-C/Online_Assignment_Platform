@@ -36,7 +36,7 @@ export default function ScheduledExams() {
 
   const handleEnroll = async (examId) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/exams/enroll/${examId}`, {
+      const res = await fetch(`/api/exams/enroll/${examId}`, {
         method: 'POST',
         credentials: 'include',
       });
