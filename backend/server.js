@@ -1,6 +1,5 @@
 import express from 'express';
 import mongoose from 'mongoose';
-import cors from 'cors';
 import authRoutes from './routes/auth.js';
 import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
@@ -34,11 +33,6 @@ app.use((req, res, next) => {
   }
 });
 
-// ✅ CORS setup (only needed if frontend is separate during dev)
-app.use(cors({
-  origin: ['http://localhost:5173'], // optional in unified setup
-  credentials: true,
-}));
 
 app.use(express.json());
 app.use(cookieParser());
