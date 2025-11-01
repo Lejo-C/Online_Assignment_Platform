@@ -48,56 +48,62 @@ export default function ViewStudents() {
 
   return (
     <div className="container mt-4 animate__animated animate__fadeIn">
-      <h2 className="h4 fw-bold mb-4 text-primary animate__animated animate__fadeInDown">🎓 Student List</h2>
-      <div className="table-responsive animate__animated animate__fadeInUp">
-        <table className="table table-bordered table-hover bg-white shadow-sm">
-          <thead className="table-primary">
-            <tr>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Gender</th>
-              <th>Date of Birth</th>
-              <th>Role</th>
-              <th>Actions</th>
+  <h2 className="h4 fw-bold mb-4 text-primary text-center text-md-start animate__animated animate__fadeInDown">
+    🎓 Student List
+  </h2>
+
+  <div className="table-responsive animate__animated animate__fadeInUp">
+    <table className="table table-bordered table-hover bg-white shadow-sm align-middle">
+      <thead className="table-primary">
+        <tr>
+          <th className="text-nowrap">Name</th>
+          <th className="text-nowrap">Email</th>
+          <th className="text-nowrap">Gender</th>
+          <th className="text-nowrap">Date of Birth</th>
+          <th className="text-nowrap">Role</th>
+          <th className="text-nowrap">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {students.length > 0 ? (
+          students.map((student) => (
+            <tr key={student._id}>
+              <td className="text-break">{student.name}</td>
+              <td className="text-break">{student.email}</td>
+              <td>{student.gender}</td>
+              <td>{new Date(student.dob).toLocaleDateString()}</td>
+              <td>
+                <span className="badge bg-success">{student.role}</span>
+              </td>
+              <td>
+                <div className="d-flex flex-wrap gap-2">
+                  <button
+                    className="btn btn-sm btn-outline-primary"
+                    onClick={() => handleEdit(student._id)}
+                  >
+                    ✏️ Edit
+                  </button>
+                  <button
+                    className="btn btn-sm btn-outline-danger"
+                    onClick={() => handleDelete(student._id)}
+                  >
+                    🗑️ Delete
+                  </button>
+                </div>
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            {students.length > 0 ? (
-              students.map((student) => (
-                <tr key={student._id} className="align-middle">
-                  <td>{student.name}</td>
-                  <td>{student.email}</td>
-                  <td>{student.gender}</td>
-                  <td>{new Date(student.dob).toLocaleDateString()}</td>
-                  <td>
-                    <span className="badge bg-success">{student.role}</span>
-                  </td>
-                  <td>
-                    <button
-                      className="btn btn-sm btn-outline-primary me-2"
-                      onClick={() => handleEdit(student._id)}
-                    >
-                      ✏️ Edit
-                    </button>
-                    <button
-                      className="btn btn-sm btn-outline-danger"
-                      onClick={() => handleDelete(student._id)}
-                    >
-                      🗑️ Delete
-                    </button>
-                  </td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="6" className="text-center text-muted">
-                  No students found.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-    </div>
+          ))
+        ) : (
+          <tr>
+            <td colSpan="6" className="text-center text-muted">
+              No students found.
+            </td>
+          </tr>
+        )}
+      </tbody>
+    </table>
+  </div>
+</div>
+
   );
 }
