@@ -1,0 +1,39 @@
+📚 Online Assignment Platform
+A full-stack web application for conducting secure online exams with real-time monitoring and automated grading. Built for students and admins with role-based access and intuitive dashboards.
+
+👨‍🎓 Student Features
+✅ Signup & Login: Secure authentication using JWT tokens.
+
+📝 Attend Exams: Students can attempt scheduled exams created by admins.
+
+🔒 Proctoring Logic: Tab switch and fullscreen exit are monitored during exams.
+
+🧠 Auto-Grading: Answers are evaluated instantly upon submission; results are shown immediately.
+
+👤 Profile Management: Students can view and edit their profile, including changing their password.
+
+📧 Forgot Password: Password reset via email link.
+
+🛠️ Admin Features
+🔐 Login: Access with predefined credentials
+
+Username: admin@example.com
+
+Password: admin123
+
+👥 Manage Students: View, edit, and delete student accounts.
+
+🧪 Create Exams: Define exam name, difficulty level, question type, schedule date/time, and duration.
+
+📋 Edit Exams: Modify assigned exams anytime.
+
+🚨 Incident Review: Monitor flagged student behaviors like tab switches or fullscreen exits.
+
+🔐 Tech Stack
+Frontend: React + Tailwind CSS
+
+Backend: Express.js + MongoDB
+
+Authentication: JWT-based session management
+
+Email Service: For password recovery links
