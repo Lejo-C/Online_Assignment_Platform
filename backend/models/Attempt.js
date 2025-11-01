@@ -3,7 +3,13 @@ import mongoose from 'mongoose';
 const attemptSchema = new mongoose.Schema(
   {
     student: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    exam: { type: mongoose.Schema.Types.ObjectId, ref: 'Exam', required: true },
+    exam: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: 'Exam',
+  required: true,
+},
+
+
 
     answers: [
       {

@@ -24,6 +24,19 @@ function ExamInstructions() {
       });
   }, [examId]);
 
+  const enterFullscreen = async () => {
+  const elem = document.documentElement; // or any specific element like document.getElementById('exam-container')
+
+  if (elem.requestFullscreen) {
+    await elem.requestFullscreen();
+  } else if (elem.webkitRequestFullscreen) {
+    await elem.webkitRequestFullscreen(); // Safari
+  } else if (elem.msRequestFullscreen) {
+    await elem.msRequestFullscreen(); // IE11
+  }
+};
+
+
   const handleStart = async () => {
     try {
       const res = await fetch('http://localhost:5000/api/attempts', {
@@ -32,7 +45,7 @@ function ExamInstructions() {
         credentials: 'include',
         body: JSON.stringify({ examId }),
       });
-
+      await enterFullscreen();
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to start exam');
 

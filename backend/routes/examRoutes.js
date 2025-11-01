@@ -279,32 +279,4 @@ router.get('/my', protect, async (req, res) => {
   }
 });
 
-router.get('/attempts/:id', protect, async (req, res) => {
-  const { id } = req.params;
-
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(400).json({ error: 'Invalid attempt ID' });
-  }
-
-  try {
-    const attempt = await Attempt.findById(id).populate('exam');
-    if (!attempt) return res.status(404).json({ error: 'Attempt not found' });
-
-    res.json({
-      _id: attempt._id,
-      examTitle: attempt.exam?.name || 'Deleted Exam',
-      submittedAt: attempt.submittedAt,
-      score: attempt.score,
-      totalQuestions: attempt.totalQuestions,
-      percentage: attempt.percentage,
-      review: attempt.review,
-      exam: attempt.exam?._id,
-    });
-  } catch (err) {
-    console.error('❌ Failed to fetch attempt by ID:', err);
-    res.status(500).json({ error: 'Failed to fetch attempt' });
-  }
-});
-
-
 export default router;

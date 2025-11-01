@@ -8,20 +8,23 @@ const router = express.Router();
 
 // 📝 Submit exam, auto-grade, and generate review
 router.post('/attempts/:id/submit', protect, async (req, res) => {
+  console.log('📨 Submission triggered for attempt:', req.params.id);
   try {
     const attempt = await Attempt.findById(req.params.id)
       .populate({
         path: 'exam',
         populate: {
           path: 'questions',
-          select: 'question correctAnswer explanation', // ✅ must include 'explanation'
+          select: 'text correctAnswer explanation',
           options: { strictPopulate: false },
         },
       });
 
-
+      
+      
     if (!attempt || !attempt.exam)
       return res.status(404).json({ error: "Attempt or exam not found" });
+    
 
     const answersMap = {};
     for (const a of attempt.answers) {
@@ -65,7 +68,7 @@ router.post('/attempts/:id/submit', protect, async (req, res) => {
 
       feedback.push({
         questionId: qid,
-        questionText: q.question,
+        questionText: q.text,
         studentAnswer,
         correctAnswer,
         isCorrect,
@@ -194,15 +197,26 @@ router.get('/attempts/my', protect, async (req, res) => {
   }
 });
 
+// Fetch attempt by ID with exam details
 router.get('/attempts/:id', protect, async (req, res) => {
+  const { id } = req.params;
   try {
-    const attempt = await Attempt.findById(req.params.id).populate('answers.question');
+    const attempt = await Attempt.findById(id).populate({ path: 'exam', select: 'name' });
     if (!attempt) return res.status(404).json({ error: 'Attempt not found' });
-
-    res.json(attempt);
+    console.log('🧪 Populated attempt:', attempt);
+    res.json({ 
+      _id: attempt._id,
+      examTitle: attempt.exam?.name || 'Deleted Exam',
+      submittedAt: attempt.submittedAt,
+      score: attempt.score,
+      totalQuestions: attempt.totalQuestions,
+      percentage: attempt.percentage,
+      review: attempt.review,
+      exam: attempt.exam, // ✅ send full exam object
+    });
   } catch (err) {
-    console.error('❌ Failed to fetch attempt:', err);
-    res.status(500).json({ error: 'Failed to fetch attempt' });
+    console.error('❌ Failed to fetch attempt by ID:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
