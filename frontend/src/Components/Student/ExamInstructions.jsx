@@ -39,7 +39,7 @@ function ExamInstructions() {
 
   const handleStart = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/attempts', {
+      const res = await fetch('/api/attempts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

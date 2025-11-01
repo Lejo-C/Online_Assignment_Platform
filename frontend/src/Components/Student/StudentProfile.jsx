@@ -13,7 +13,7 @@ export default function StudentProfile() {
     useEffect(() => {
         const fetchProfile = async () => {
             try {
-                const res = await fetch('http://localhost:5000/api/auth/me', {
+                const res = await fetch('/api/auth/me', {
                     credentials: 'include',
                 });
                 const data = await res.json();
@@ -53,7 +53,7 @@ export default function StudentProfile() {
                 payload.append('avatar', formData.avatar);
             }
 
-            const res = await fetch('http://localhost:5000/api/profile/update', {
+            const res = await fetch('/api/profile/update', {
                 method: 'PUT',
                 credentials: 'include',
                 body: payload,
@@ -196,7 +196,7 @@ export default function StudentProfile() {
   <button
     onClick={async () => {
       try {
-        await fetch('http://localhost:5000/api/auth/logout', {
+        await fetch('/api/auth/logout', {
           method: 'POST',
           credentials: 'include',
         });

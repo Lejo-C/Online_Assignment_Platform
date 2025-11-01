@@ -9,7 +9,7 @@ export default function ViewStudents() {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const res = await fetch('http://localhost:5000/api/admin/users', {
+        const res = await fetch('/api/admin/users', {
           method: 'GET',
           credentials: 'include',
         });

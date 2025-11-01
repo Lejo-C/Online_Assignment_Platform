@@ -10,7 +10,7 @@ export default function ScheduledExams() {
   const refreshExams = async () => {
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:5000/api/exams/assigned', {
+      const res = await fetch('/api/exams/assigned', {
         credentials: 'include',
       });
       const data = await res.json();

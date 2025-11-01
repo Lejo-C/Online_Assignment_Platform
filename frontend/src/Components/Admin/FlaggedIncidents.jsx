@@ -8,7 +8,7 @@ function FlaggedIncidents() {
   useEffect(() => {
     const fetchIncidents = async () => {
       try {
-        const res = await fetch('http://localhost:5000/api/incidents', {
+        const res = await fetch('/api/incidents', {
           credentials: 'include',
         });
         const data = await res.json();
