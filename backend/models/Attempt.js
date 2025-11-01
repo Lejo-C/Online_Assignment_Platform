@@ -28,17 +28,15 @@ const attemptSchema = new mongoose.Schema(
 
     // ✅ Feedback for each question
     feedback: [
-      {
-        questionId: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: 'Question',
-        },
-        questionText: String,
-        studentAnswer: String,
-        correctAnswer: String,
-        isCorrect: Boolean,
-      },
-    ],
+  {
+    questionId: { type: mongoose.Schema.Types.ObjectId, ref: 'Question' },
+    questionText: String,
+    studentAnswer: String,
+    correctAnswer: String,
+    isCorrect: Boolean,
+    explanation: String,
+  }
+],
 
     // ✅ Submission and start tracking
     submittedAt: Date,

@@ -16,7 +16,7 @@ import ScheduledExams from './Components/Student/ScheduledExams.jsx';
 import ResultPage from './Components/Student/ResultPage.jsx';
 import FlaggedIncidents from './Components/Admin/FlaggedIncidents.jsx';
 import StudentProfile from './Components/Student/StudentProfile.jsx';
-
+import EditUser from './Components/Admin/EditUser.jsx';
 function App() {
   const [count, setCount] = useState(0);
 
@@ -38,6 +38,7 @@ function App() {
         <Route path="/student/result/:attemptId" element={<ResultPage />} />
         <Route path="/admin/flagged-incidents" element={<FlaggedIncidents />} />
         <Route path="/profile" element={<StudentProfile />} />
+        <Route path="/admin/edit-user/:id" element={<EditUser />} />
       </Routes>
     </>
   );

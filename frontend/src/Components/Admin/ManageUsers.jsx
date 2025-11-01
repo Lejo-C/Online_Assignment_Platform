@@ -32,11 +32,12 @@ export default function ViewStudents() {
         method: 'DELETE',
         credentials: 'include',
       });
-
       if (!res.ok) throw new Error('Delete failed');
-      setStudents((prev) => prev.filter((s) => s._id !== id));
+
+      setStudents((prev) => prev.filter((student) => student._id !== id));
+      alert('✅ Student deleted successfully!');
     } catch (err) {
-      console.error('❌ Failed to delete student:', err);
+      console.error('❌ Failed to delete user:', err);
       alert('Could not delete student.');
     }
   };

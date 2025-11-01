@@ -68,7 +68,7 @@ router.post('/attempts/:id/submit', protect, async (req, res) => {
 
       feedback.push({
         questionId: qid,
-        questionText: q.text,
+        questionText: q.text || q.question || 'Question text not available',
         studentAnswer,
         correctAnswer,
         isCorrect,
@@ -212,7 +212,8 @@ router.get('/attempts/:id', protect, async (req, res) => {
       totalQuestions: attempt.totalQuestions,
       percentage: attempt.percentage,
       review: attempt.review,
-      exam: attempt.exam, // ✅ send full exam object
+      exam: attempt.exam,
+      feedback: attempt.feedback || [],
     });
   } catch (err) {
     console.error('❌ Failed to fetch attempt by ID:', err);

@@ -1,12 +1,17 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
-
+import Incident from './Incident.js';
 const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   role: { type: String, enum: ['student', 'admin'], default: 'student' },
-  gender: { type: String, enum: ['male', 'female', 'other'], required: true },
+  gender: {
+  type: String,
+  enum: ['male', 'female', 'other'], // ✅ lowercase values
+  required: true,
+},
+
   dob: { type: Date, required: true },
 
   resetToken: { type: String },

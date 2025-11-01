@@ -1,6 +1,7 @@
 import express from 'express';
 import User from '../models/User.js';
 import { protect, isAdmin } from '../middleware/authMiddleware.js';
+import Incident from '../models/Incident.js';
 
 const router = express.Router(); // ✅ This line is critical
 
@@ -14,18 +15,60 @@ router.get('/users', protect, isAdmin, async (req, res) => {
   }
 });
 
-router.delete('/users/:id', protect, isAdmin, async (req, res) => {
+
+//edit user details
+router.put('/users/:id', protect, isAdmin, async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
     if (!user) return res.status(404).json({ message: 'User not found' });
 
-    await user.deleteOne();
-    res.json({ message: 'User deleted' });
+    const { name, email, gender, dob } = req.body;
+    user.name = name || user.name;
+    user.email = email || user.email;
+    user.gender = gender || user.gender;
+    user.dob = dob || user.dob;
+
+    await user.save();
+    res.json({ message: 'User updated successfully' });
   } catch (err) {
-    console.error('❌ Failed to delete user:', err);
+    console.error('❌ Failed to update user:', err);
     res.status(500).json({ message: 'Server error' });
   }
 });
+
+//get user details
+router.get('/users/:id', protect, isAdmin, async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id).select('-password');
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    res.json(user);
+  } catch (err) {
+    console.error('❌ Failed to fetch user details:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+//update changes to user details  
+router.put('/users/:id', protect, isAdmin, async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    const { name, email, gender, dob } = req.body;
+    user.name = name || user.name;
+    user.email = email || user.email;
+    user.gender = gender || user.gender;
+    user.dob = dob || user.dob;
+
+    await user.save();
+    res.json({ message: 'User updated successfully' });
+  } catch (err) {
+    console.error('❌ Failed to update user:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 
 router.delete('/users/:id', protect, isAdmin, async (req, res) => {
   try {
