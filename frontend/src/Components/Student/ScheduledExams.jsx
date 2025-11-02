@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-const apiUrl = import.meta.env.VITE_API_URL;
+
+const apiUrl = import.meta.env.VITE_API_URL || 'https://online-assignment-platform.onrender.com';
 
 export default function ScheduledExams() {
   const [exams, setExams] = useState([]);
@@ -11,10 +12,14 @@ export default function ScheduledExams() {
   const refreshExams = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/exams/assigned', {
+      // ✅ Fixed: Use full URL with apiUrl
+      const res = await fetch(`${apiUrl}/api/exams/assigned`, {
         credentials: 'include',
       });
+      
       const data = await res.json();
+      console.log('📚 Exams response:', data); // Debug log
+      
       if (res.ok) {
         setExams(data);
         setMessage('');
@@ -22,6 +27,7 @@ export default function ScheduledExams() {
         setMessage(data.error || 'Failed to load exams');
       }
     } catch (err) {
+      console.error('❌ Fetch error:', err); // Debug log
       setMessage('Server error while fetching exams');
     } finally {
       setLoading(false);
@@ -54,6 +60,7 @@ export default function ScheduledExams() {
         setMessage(data.error || 'Enrollment failed');
       }
     } catch (err) {
+      console.error('❌ Enroll error:', err);
       setMessage('Server error during enrollment');
     }
   };
@@ -72,11 +79,22 @@ export default function ScheduledExams() {
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-6">
       <h2 className="text-2xl font-bold text-gray-800 mb-4">📅 Available Exams</h2>
 
-      {message && <div className="bg-red-100 text-red-700 px-4 py-2 rounded mb-4">{message}</div>}
+      {message && (
+        <div className={`px-4 py-2 rounded mb-4 ${
+          message.includes('No exams') 
+            ? 'bg-yellow-100 text-yellow-800' 
+            : 'bg-red-100 text-red-700'
+        }`}>
+          {message}
+        </div>
+      )}
+
       {loading ? (
         <p className="text-gray-500">Loading exams...</p>
       ) : exams.length === 0 ? (
-        <div className="bg-yellow-100 text-yellow-800 px-4 py-2 rounded">No exams available at the moment.</div>
+        <div className="bg-yellow-100 text-yellow-800 px-4 py-2 rounded">
+          No exams available at the moment.
+        </div>
       ) : (
         <div className="overflow-x-auto rounded-lg shadow-md">
           <table className="min-w-full bg-white border border-gray-200 text-sm text-left">
