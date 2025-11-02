@@ -1,15 +1,25 @@
+import User from '../models/User.js';
+import { generateToken } from '../utils/generateToken.js';
 import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import User from '../models/User.js';
 import { protect } from '../middleware/authMiddleware.js';
 import Profile from '../models/Profile.js';
 
 const router = express.Router();
 
+// Cookie configuration for cross-origin
+const getCookieOptions = () => ({
+  httpOnly: true,
+  secure: true, // Always true for production (HTTPS required)
+  sameSite: 'none', // Required for cross-origin cookies
+  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  path: '/',
+});
+
+// 📝 Signup route
 router.post('/signup', async (req, res) => {
   const { name, email, password, gender, dob } = req.body;
-  
 
   try {
     const existingUser = await User.findOne({ email: email.trim().toLowerCase() });
@@ -20,7 +30,7 @@ router.post('/signup', async (req, res) => {
     const user = new User({
       name,
       email: email.trim().toLowerCase(),
-      password, // ✅ raw password — schema will hash it
+      password,
       gender,
       dob,
       role: 'student',
@@ -28,7 +38,7 @@ router.post('/signup', async (req, res) => {
 
     await user.save();
 
-    // ✅ Profile creation logic added
+    // Create profile
     const profile = new Profile({
       user: user._id,
       avatar: '',
@@ -37,9 +47,16 @@ router.post('/signup', async (req, res) => {
 
     await profile.save();
 
+    // Generate token and set cookie
+    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, {
+      expiresIn: '7d',
+    });
+
+    res.cookie('token', token, getCookieOptions());
+
     res.status(201).json({
       message: 'User created successfully',
-      user: { id: user._id, name: user.name, email: user.email },
+      user: { id: user._id, name: user.name, email: user.email, role: user.role },
     });
   } catch (err) {
     console.error('❌ Signup error:', err);
@@ -52,7 +69,6 @@ router.post('/login', async (req, res) => {
   try {
     const email = (req.body.email || '').trim().toLowerCase();
     const password = (req.body.password || '').trim();
-    
 
     const user = await User.findOne({ email });
     if (!user) return res.status(401).json({ error: 'Invalid credentials' });
@@ -64,11 +80,7 @@ router.post('/login', async (req, res) => {
       expiresIn: '7d',
     });
 
-    res.cookie('token', token, {
-      httpOnly: true,
-      secure: false, // ✅ set to true in production with HTTPS
-      sameSite: 'lax',
-    });
+    res.cookie('token', token, getCookieOptions());
 
     res.json({
       message: 'Login successful',
@@ -76,7 +88,7 @@ router.post('/login', async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
-        role: user.role || 'student', // ✅ include role for frontend redirect
+        role: user.role || 'student',
       },
     });
   } catch (err) {
@@ -105,6 +117,10 @@ router.get('/me', protect, async (req, res) => {
   }
 });
 
-
+// 🚪 Logout route
+router.post('/logout', (req, res) => {
+  res.clearCookie('token', getCookieOptions());
+  res.json({ message: 'Logged out successfully' });
+});
 
 export default router;
