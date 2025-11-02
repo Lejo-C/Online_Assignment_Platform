@@ -14,7 +14,7 @@ export default function StudentProfile() {
     useEffect(() => {
         const fetchProfile = async () => {
             try {
-                const res = await fetch('${apiUrl}/api/auth/me', {
+                const res = await fetch(`${apiUrl}/api/auth/me`, {
                     credentials: 'include',
                 });
                 const data = await res.json();
@@ -54,7 +54,7 @@ export default function StudentProfile() {
                 payload.append('avatar', formData.avatar);
             }
 
-            const res = await fetch('${apiUrl}/api/profile/update', {
+            const res = await fetch(`${apiUrl}/api/profile/update`, {
                 method: 'PUT',
                 credentials: 'include',
                 body: payload,
@@ -197,7 +197,7 @@ export default function StudentProfile() {
   <button
     onClick={async () => {
       try {
-        await fetch('${apiUrl}/api/auth/logout', {
+        await fetch(`${apiUrl}/api/auth/logout`, {
           method: 'POST',
           credentials: 'include',
         });

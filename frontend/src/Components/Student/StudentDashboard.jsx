@@ -11,7 +11,7 @@ export default function StudentDashboard() {
   useEffect(() => {
     const fetchUserAndAttempts = async () => {
       try {
-        const userRes = await fetch('${apiUrl}/api/auth/me', {
+        const userRes = await fetch(`${apiUrl}/api/auth/me`, {
           credentials: 'include',
         });
 
@@ -25,7 +25,7 @@ export default function StudentDashboard() {
           setName(userData.name);
         }
 
-        const rawRes = await fetch('${apiUrl}/api/attempts/my', {
+        const rawRes = await fetch(`${apiUrl}/api/attempts/my`, {
           credentials: 'include',
         });
         const rawData = await rawRes.json();

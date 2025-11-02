@@ -40,7 +40,7 @@ function ExamInstructions() {
 
   const handleStart = async () => {
     try {
-      const res = await fetch('${apiUrl}/api/attempts', {
+      const res = await fetch(`${apiUrl}/api/attempts`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

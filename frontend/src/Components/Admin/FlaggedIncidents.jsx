@@ -9,7 +9,7 @@ function FlaggedIncidents() {
   useEffect(() => {
     const fetchIncidents = async () => {
       try {
-        const res = await fetch('${apiUrl}/api/incidents', {
+        const res = await fetch(`${apiUrl}/api/incidents`, {
           credentials: 'include',
         });
         const data = await res.json();

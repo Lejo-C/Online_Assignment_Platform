@@ -18,7 +18,7 @@ export default function AssignedExams() {
 
   const fetchExams = async () => {
     try {
-      const res = await fetch('${apiUrl}/api/exams/assigned', {
+      const res = await fetch(`${apiUrl}/api/exams/assigned`, {
         credentials: 'include',
       });
       if (!res.ok) throw new Error('Unauthorized or failed to fetch');

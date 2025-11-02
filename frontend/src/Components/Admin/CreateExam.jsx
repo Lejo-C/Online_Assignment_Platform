@@ -20,7 +20,7 @@ export default function CreateExam() {
     }
 
     try {
-      const res = await fetch('${apiUrl}/api/exams/create', {
+      const res = await fetch(`${apiUrl}/api/exams/create`, {
         method: 'POST',
         credentials: 'include',
         headers: {

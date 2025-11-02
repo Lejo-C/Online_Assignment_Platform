@@ -18,7 +18,7 @@ function AttemptExam() {
 
   const logIncident = async (type) => {
     try {
-      await fetch('${apiUrl}/api/incidents/report', {
+      await fetch(`${apiUrl}/api/incidents/report`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
