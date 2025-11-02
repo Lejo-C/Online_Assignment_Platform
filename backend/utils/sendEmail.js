@@ -13,7 +13,8 @@ export const sendResetEmail = async (email, link) => {
   socketTimeout: 10000, // 10 seconds
 });
 
-  try {
+
+try {
   console.log('📤 Sending reset email to:', email);
   await transporter.sendMail({
     from: process.env.EMAIL_USER,
