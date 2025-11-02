@@ -1,6 +1,7 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import authRoutes from './routes/auth.js';
+import cors from 'cors';
 import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 import passwordRoutes from './routes/passwordRoutes.js';
@@ -15,8 +16,14 @@ import { fileURLToPath } from 'url';
 import profileRoutes from './routes/profile.js';
 
 dotenv.config();
-
 const app = express();
+
+app.use(cors({
+  origin: 'https://online-assignment-platform.netlify.app',
+  credentials: true,
+}));
+
+
 const server = http.createServer(app);
 
 const __filename = fileURLToPath(import.meta.url);
