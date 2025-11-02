@@ -11,7 +11,7 @@ export default function Login() {
     e.preventDefault();
 
     try {
-      const res = await fetch('https://online-assignment-platform.onrender.com/api/auth/login', {
+      const res = await fetch('${apiUrl}/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

@@ -9,7 +9,7 @@ export default function ViewStudents() {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const res = await fetch('https://online-assignment-platform.onrender.com/api/admin/users', {
+        const res = await fetch('${apiUrl}/api/admin/users', {
           method: 'GET',
           credentials: 'include',
         });
@@ -28,7 +28,7 @@ export default function ViewStudents() {
     if (!window.confirm('Are you sure you want to delete this student?')) return;
 
     try {
-      const res = await fetch(`https://online-assignment-platform.onrender.com/api/admin/users/${id}`, {
+      const res = await fetch(`${apiUrl}/api/admin/users/${id}`, {
         method: 'DELETE',
         credentials: 'include',
       });

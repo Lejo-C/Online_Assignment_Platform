@@ -10,7 +10,7 @@ function ExamInstructions() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    fetch(`https://online-assignment-platform.onrender.com/api/exams/${examId}`, {
+    fetch(`${apiUrl}/api/exams/${examId}`, {
       credentials: 'include',
     })
       .then(res => res.json())
@@ -39,7 +39,7 @@ function ExamInstructions() {
 
   const handleStart = async () => {
     try {
-      const res = await fetch('https://online-assignment-platform.onrender.com/api/attempts', {
+      const res = await fetch('${apiUrl}/api/attempts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

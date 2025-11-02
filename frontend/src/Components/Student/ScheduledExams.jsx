@@ -10,7 +10,7 @@ export default function ScheduledExams() {
   const refreshExams = async () => {
     setLoading(true);
     try {
-      const res = await fetch('https://online-assignment-platform.onrender.com/api/exams/assigned', {
+      const res = await fetch('${apiUrl}/api/exams/assigned', {
         credentials: 'include',
       });
       const data = await res.json();
@@ -36,7 +36,7 @@ export default function ScheduledExams() {
 
   const handleEnroll = async (examId) => {
     try {
-      const res = await fetch(`https://online-assignment-platform.onrender.com/api/exams/enroll/${examId}`, {
+      const res = await fetch(`${apiUrl}/api/exams/enroll/${examId}`, {
         method: 'POST',
         credentials: 'include',
       });

@@ -14,7 +14,7 @@ export default function EditUser() {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await fetch(`https://online-assignment-platform.onrender.com/api/admin/users/${id}`, {
+        const res = await fetch(`${apiUrl}/api/admin/users/${id}`, {
           credentials: 'include',
         });
         const data = await res.json();
@@ -41,7 +41,7 @@ export default function EditUser() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try { 
-      const res = await fetch(`https://online-assignment-platform.onrender.com/api/admin/users/${id}`, {
+      const res = await fetch(`${apiUrl}/api/admin/users/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

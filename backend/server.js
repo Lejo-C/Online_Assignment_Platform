@@ -18,13 +18,24 @@ import profileRoutes from './routes/profile.js';
 dotenv.config();
 const app = express();
 
+const allowedOrigins = [
+  'https://online-assignment-platform.netlify.app',
+  'http://localhost:5000',
+];
+
 app.use(cors({
-  origin: 'https://online-assignment-platform.netlify.app',
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true,
 }));
 
-app.options('*', cors());
+
 
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', 'https://online-assignment-platform.netlify.app');
@@ -55,7 +66,15 @@ app.use(express.json());
 app.use(cookieParser());
 
 // ✅ MongoDB connection
-mongoose.connect(process.env.MONGO_URI)
+mongoose.connect(process.env.MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
+.then(() => console.log('✅ Connected to MongoDB'))
+.catch((err) => {
+  console.error('❌ MongoDB connection error:', err.message);
+  process.exit(1); // Exit if DB fails
+});
   
 
 // ✅ API routes
@@ -72,16 +91,6 @@ app.use('/api/admin', adminRoutes);
 app.use((err, req, res, next) => {
   console.error('❌ Server error:', err.stack);
   res.status(500).json({ error: 'Internal server error' });
-});
-
-// ✅ SPA fallback (after all routes)
-app.use((req, res, next) => {
-  // Only fallback for GET requests that aren't API or static
-  if (req.method === 'GET' && !req.path.startsWith('/api')) {
-    res.sendFile(path.join(__dirname, 'frontend', 'dist', 'index.html'));
-  } else {
-    next();
-  }
 });
 
 

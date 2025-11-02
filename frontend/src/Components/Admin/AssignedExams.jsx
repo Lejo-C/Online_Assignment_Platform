@@ -18,7 +18,7 @@ export default function AssignedExams() {
 
   const fetchExams = async () => {
     try {
-      const res = await fetch('https://online-assignment-platform.onrender.com/api/exams/assigned', {
+      const res = await fetch('${apiUrl}/api/exams/assigned', {
         credentials: 'include',
       });
       if (!res.ok) throw new Error('Unauthorized or failed to fetch');
@@ -32,7 +32,7 @@ export default function AssignedExams() {
 
   const handleDelete = async (id) => {
     try {
-      await fetch(`/api/exams/delete/${id}`, {
+      await fetch(`${apiUrl}/api/exams/delete/${id}`, {
         method: 'DELETE',
         credentials: 'include',
       });
@@ -55,7 +55,7 @@ export default function AssignedExams() {
 
   const handleUpdate = async () => {
     try {
-      await fetch(`https://online-assignment-platform.onrender.com/api/exams/update/${editId}`, {
+      await fetch(`${apiUrl}/api/exams/update/${editId}`, {
         method: 'PUT',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
