@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import 'animate.css';
 const apiUrl = import.meta.env.VITE_API_URL;
+
 export default function CreateExam() {
   const [examName, setExamName] = useState('');
   const [difficulty, setDifficulty] = useState('');
@@ -30,7 +31,7 @@ export default function CreateExam() {
           examName,
           difficulty,
           type,
-          schedule: new Date(schedule).toISOString(),
+          schedule: scheduledDate.toISOString(), // ✅ updated here
           duration: Number(duration),
         }),
       });
