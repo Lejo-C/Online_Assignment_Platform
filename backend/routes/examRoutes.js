@@ -4,38 +4,12 @@ import Exam from '../models/Exam.js';
 import Question from '../models/Question.js';
 import Attempt from '../models/Attempt.js';
 import { protect, isAdmin } from '../middleware/authMiddleware.js';
-import ExamAttempt from '../models/Attempt.js';
 
 const router = express.Router();
 
+// ✅ SPECIFIC ROUTES FIRST (before /:id)
 
-
-router.post('/:examId/start', protect, async (req, res) => {
-  try {
-    const existing = await Attempt.findOne({
-      student: req.user._id,
-      exam: req.params.examId,
-      startedAt: new Date(),
-    });
-
-    if (!existing) {
-      const attempt = new Attempt({
-        student: req.user._id,
-        exam: req.params.examId,
-        submitted: false,
-      });
-      await attempt.save();
-      
-    }
-
-    res.json({ message: 'Exam attempt initialized' });
-  } catch (err) {
-    console.error('❌ Error creating exam attempt:', err);
-    res.status(500).json({ error: 'Failed to start exam' });
-  }
-});
-
-// ✅ Create a new exam
+// Create exam
 router.post('/create', protect, async (req, res) => {
   const { examName, difficulty, type, schedule, duration } = req.body;
 
@@ -76,28 +50,7 @@ router.post('/create', protect, async (req, res) => {
   }
 });
 
-// ✅ Enroll a student in an exam
-router.post('/enroll/:examId', protect, async (req, res) => {
-  const { examId } = req.params;
-  const userId = req.user._id;
-
-  try {
-    const exam = await Exam.findById(examId);
-    if (!exam) return res.status(404).json({ error: 'Exam not found' });
-
-    if (!exam.enrolledStudents.includes(userId)) {
-      exam.enrolledStudents.push(userId);
-      await exam.save();
-    }
-
-    res.json({ message: 'Enrolled successfully' });
-  } catch (err) {
-    console.error('Enrollment error:', err);
-    res.status(500).json({ error: 'Enrollment failed' });
-  }
-});
-
-// ✅ Get all assigned exams with student-specific status
+// Get all assigned exams
 router.get('/assigned', protect, async (req, res) => {
   const studentId = req.user._id;
 
@@ -135,29 +88,96 @@ router.get('/assigned', protect, async (req, res) => {
   }
 });
 
-// ✅ Update an exam
-router.put('/update/:id', protect, async (req, res) => {
+// Get my attempts
+router.get('/my', protect, async (req, res) => {
   try {
-    const updated = await Exam.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    res.json({ message: 'Exam updated', exam: updated });
+    const attempts = await Attempt.find({ student: req.user._id }).populate({
+      path: 'exam',
+      select: 'name',
+    });
+
+    res.json(attempts);
   } catch (err) {
-    res.status(500).json({ error: 'Update failed' });
+    console.error('❌ Error fetching attempts:', err);
+    res.status(500).json({ error: 'Failed to load attempts' });
   }
 });
 
-// ✅ Delete an exam
-router.delete('/delete/:id', protect, async (req, res) => {
+// Create attempt
+router.post('/attempts', protect, async (req, res) => {
   try {
-    await Exam.findByIdAndDelete(req.params.id);
-    res.json({ message: 'Exam deleted' });
+    const { examId } = req.body;
+    const studentId = req.user._id;
+
+    const existing = await Attempt.findOne({ student: studentId, exam: examId });
+    if (existing && existing.submittedAt) {
+      return res.status(400).json({ error: 'You have already submitted this exam.' });
+    }
+
+    const attempt = new Attempt({
+      student: studentId,
+      exam: examId,
+      startedAt: new Date(),
+    });
+
+    await attempt.save();
+
+    res.status(201).json({ attemptId: attempt._id });
   } catch (err) {
-    res.status(500).json({ error: 'Delete failed' });
+    console.error('❌ Error creating attempt:', err);
+    res.status(500).json({ error: 'Failed to create attempt' });
   }
 });
 
+// ✅ DYNAMIC ROUTES AFTER SPECIFIC ROUTES
 
+// Enroll in exam
+router.post('/enroll/:examId', protect, async (req, res) => {
+  const { examId } = req.params;
+  const userId = req.user._id;
 
-// POST draft attempt
+  try {
+    const exam = await Exam.findById(examId);
+    if (!exam) return res.status(404).json({ error: 'Exam not found' });
+
+    if (!exam.enrolledStudents.includes(userId)) {
+      exam.enrolledStudents.push(userId);
+      await exam.save();
+    }
+
+    res.json({ message: 'Enrolled successfully' });
+  } catch (err) {
+    console.error('Enrollment error:', err);
+    res.status(500).json({ error: 'Enrollment failed' });
+  }
+});
+
+// Start exam attempt
+router.post('/:examId/start', protect, async (req, res) => {
+  try {
+    const existing = await Attempt.findOne({
+      student: req.user._id,
+      exam: req.params.examId,
+      startedAt: new Date(),
+    });
+
+    if (!existing) {
+      const attempt = new Attempt({
+        student: req.user._id,
+        exam: req.params.examId,
+        submitted: false,
+      });
+      await attempt.save();
+    }
+
+    res.json({ message: 'Exam attempt initialized' });
+  } catch (err) {
+    console.error('❌ Error creating exam attempt:', err);
+    res.status(500).json({ error: 'Failed to start exam' });
+  }
+});
+
+// Save draft
 router.post('/:id/draft', protect, async (req, res) => {
   try {
     const { answers, markedForReview } = req.body;
@@ -186,49 +206,24 @@ router.post('/:id/draft', protect, async (req, res) => {
   }
 });
 
-router.post('/attempts', protect, async (req, res) => {
-  try {
-    const { examId } = req.body;
-    const studentId = req.user._id;
-
-    const existing = await Attempt.findOne({ student: studentId, exam: examId });
-    if (existing && existing.submittedAt) {
-      return res.status(400).json({ error: 'You have already submitted this exam.' });
-    }
-
-    const attempt = new Attempt({
-      student: studentId,
-      exam: examId,
-      startedAt: new Date(), // ✅ Set start time here
-    });
-
-    await attempt.save();
-
-    res.status(201).json({ attemptId: attempt._id });
-  } catch (err) {
-    console.error('❌ Error creating attempt:', err);
-    res.status(500).json({ error: 'Failed to create attempt' });
-  }
-});
-
-
-
-
+// Get exam questions
 router.get('/:id/questions', async (req, res) => {
   try {
     const exam = await Exam.findById(req.params.id).populate('questions');
     if (!exam) {
       return res.status(404).json({ error: 'Exam not found' });
     }
-    res.json({ questions: exam.questions,
+    res.json({ 
+      questions: exam.questions,
       duration: exam.duration,
-     });
+    });
   } catch (err) {
     console.error('❌ Error fetching exam questions:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
+// Get single exam (MUST BE LAST among GET routes)
 router.get('/:id', protect, async (req, res) => {
   const { id } = req.params;
   const { attemptId } = req.query;
@@ -262,19 +257,25 @@ router.get('/:id', protect, async (req, res) => {
   }
 });
 
-
-router.get('/my', protect, async (req, res) => {
+// Update exam
+router.put('/update/:id', protect, async (req, res) => {
   try {
-    const attempts = await Attempt.find({ student: req.user._id }).populate({
-      path: 'exam',
-      select: 'name',
-    });
-
-    res.json(attempts);
+    const updated = await Exam.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    res.json({ message: 'Exam updated', exam: updated });
   } catch (err) {
-    console.error('❌ Error fetching attempts:', err);
-    res.status(500).json({ error: 'Failed to load attempts' });
+    res.status(500).json({ error: 'Update failed' });
+  }
+});
+
+// Delete exam
+router.delete('/delete/:id', protect, async (req, res) => {
+  try {
+    await Exam.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Exam deleted' });
+  } catch (err) {
+    res.status(500).json({ error: 'Delete failed' });
   }
 });
 
 export default router;
+    
