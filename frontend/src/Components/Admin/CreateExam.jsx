@@ -20,7 +20,7 @@ export default function CreateExam() {
     }
 
     try {
-      const res = await fetch('/api/exams/create', {
+      const res = await fetch('https://online-assignment-platform.onrender.com/api/exams/create', {
         method: 'POST',
         credentials: 'include',
         headers: {

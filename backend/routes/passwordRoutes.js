@@ -18,7 +18,7 @@ router.post('/forgot', async (req, res) => {
     user.resetTokenExpiry = Date.now() + 3600000; // 1 hour
     await user.save();
 
-    const link = `http://localhost:5173/reset-password/${token}`;
+    const link = `https://online-assignment-platform.onrender.com/reset-password/${token}`;
     await sendResetEmail(email, link);
 
     res.json({ message: 'Reset link sent to email' });

@@ -10,7 +10,7 @@ export default function StudentDashboard() {
   useEffect(() => {
     const fetchUserAndAttempts = async () => {
       try {
-        const userRes = await fetch('/api/auth/me', {
+        const userRes = await fetch('https://online-assignment-platform.onrender.com/api/auth/me', {
           credentials: 'include',
         });
 
@@ -24,7 +24,7 @@ export default function StudentDashboard() {
           setName(userData.name);
         }
 
-        const rawRes = await fetch('/api/attempts/my', {
+        const rawRes = await fetch('https://online-assignment-platform.onrender.com/api/attempts/my', {
           credentials: 'include',
         });
         const rawData = await rawRes.json();
@@ -37,7 +37,7 @@ export default function StudentDashboard() {
           rawData
             .filter((a) => a.exam)
             .map(async (a) => {
-              const res = await fetch(`/api/attempts/${a._id}`, {
+              const res = await fetch(`https://online-assignment-platform.onrender.com/api/attempts/${a._id}`, {
                 credentials: 'include',
               });
               const data = await res.json();

@@ -17,7 +17,7 @@ function AttemptExam() {
 
   const logIncident = async (type) => {
     try {
-      await fetch('/api/incidents/report', {
+      await fetch('https://online-assignment-platform.onrender.com/api/incidents/report', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -42,7 +42,7 @@ function AttemptExam() {
   };
 
   useEffect(() => {
-    fetch(`/api/exams/${examId}?attemptId=${attemptId}`, {
+    fetch(`https://online-assignment-platform.onrender.com/api/exams/${examId}?attemptId=${attemptId}`, {
       credentials: 'include',
     })
       .then(async (res) => {
@@ -141,7 +141,7 @@ function AttemptExam() {
   useEffect(() => {
     const fetchAttempt = async () => {
       try {
-        const res = await fetch(`/api/attempts/${attemptId}`, {
+        const res = await fetch(`https://online-assignment-platform.onrender.com/api/attempts/${attemptId}`, {
           credentials: 'include',
         });
         const data = await res.json();
@@ -164,7 +164,7 @@ setSelectedAnswers(initialAnswers);
     setSelectedAnswers((prev) => ({ ...prev, [qid]: answer }));
 
     try {
-      const res = await fetch(`/api/attempts/${attemptId}/answer`, {
+      const res = await fetch(`https://online-assignment-platform.onrender.com/api/attempts/${attemptId}/answer`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -180,7 +180,7 @@ setSelectedAnswers(initialAnswers);
 
   const handleSubmit = async () => {
     try {
-      const res = await fetch(`/api/attempts/${attemptId}/submit`, {
+      const res = await fetch(`https://online-assignment-platform.onrender.com/api/attempts/${attemptId}/submit`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

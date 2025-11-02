@@ -10,7 +10,7 @@ export default function ResultPage() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    fetch(`/api/attempts/${attemptId}`, {
+    fetch(`https://online-assignment-platform.onrender.com/api/attempts/${attemptId}`, {
       credentials: 'include',
     })
       .then(async (res) => {

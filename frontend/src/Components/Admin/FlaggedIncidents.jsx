@@ -8,7 +8,7 @@ function FlaggedIncidents() {
   useEffect(() => {
     const fetchIncidents = async () => {
       try {
-        const res = await fetch('/api/incidents', {
+        const res = await fetch('https://online-assignment-platform.onrender.com/api/incidents', {
           credentials: 'include',
         });
         const data = await res.json();
