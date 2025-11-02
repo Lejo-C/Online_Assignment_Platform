@@ -30,7 +30,7 @@ export default function CreateExam() {
           examName,
           difficulty,
           type,
-          schedule,
+          schedule: new Date(schedule).toISOString(),
           duration: Number(duration),
         }),
       });
