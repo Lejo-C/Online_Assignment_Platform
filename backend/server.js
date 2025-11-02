@@ -20,30 +20,27 @@ const app = express();
 
 const allowedOrigins = [
   'https://online-assignment-platform.netlify.app',
-  'http://localhost:5174', // ✅ your dev server
+  'http://localhost:5174',
 ];
+
 
 app.use(cors({
   origin: function (origin, callback) {
+    console.log('🔍 Incoming origin:', origin);
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
+      console.warn('❌ Blocked by CORS:', origin);
       callback(new Error('Not allowed by CORS'));
     }
   },
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 
 
 
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', 'https://online-assignment-platform.netlify.app');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.header('Access-Control-Allow-Credentials', 'true');
-  next();
-});
 
 const server = http.createServer(app);
 
