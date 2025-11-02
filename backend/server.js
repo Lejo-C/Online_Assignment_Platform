@@ -20,7 +20,7 @@ const app = express();
 
 const allowedOrigins = [
   'https://online-assignment-platform.netlify.app',
-  'http://localhost:5000',
+  'http://localhost:5174', // ✅ your dev server
 ];
 
 app.use(cors({

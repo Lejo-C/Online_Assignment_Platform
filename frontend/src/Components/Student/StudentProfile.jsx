@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
+const apiUrl = import.meta.env.VITE_API_URL;
 
 export default function StudentProfile() {
     const [student, setStudent] = useState(null);

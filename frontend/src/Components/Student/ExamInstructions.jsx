@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import 'animate.css';
+const apiUrl = import.meta.env.VITE_API_URL;
 
 function ExamInstructions() {
   const { examId } = useParams();

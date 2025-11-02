@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import 'animate.css';
-
+const apiUrl = import.meta.env.VITE_API_URL;
 export default function AssignedExams() {
   const [exams, setExams] = useState([]);
   const [editId, setEditId] = useState(null);

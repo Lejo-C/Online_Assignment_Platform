@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import 'animate.css';
+const apiUrl = import.meta.env.VITE_API_URL;
 
 function FlaggedIncidents() {
   const [incidents, setIncidents] = useState([]);
