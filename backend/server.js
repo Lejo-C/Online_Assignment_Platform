@@ -12,6 +12,7 @@ import resultRoutes from './routes/result.js';
 import incidentRoutes from './routes/incidentRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import profileRoutes from './routes/profile.js';
+// import manualQuestionRoutes from "./routes/manualQuestionRoutes.js";
 
 dotenv.config();
 const app = express();
@@ -59,7 +60,7 @@ app.use('/api', studentRoutes);
 app.use('/api/attempts', resultRoutes);
 app.use('/api/incidents', incidentRoutes);
 app.use('/api/admin', adminRoutes);
-
+// app.use("/api/manual-questions", manualQuestionRoutes);
 // ✅ Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Server is running' });

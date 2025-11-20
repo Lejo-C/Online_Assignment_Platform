@@ -11,28 +11,15 @@ const router = express.Router();
 
 // Create exam
 router.post('/create', protect, async (req, res) => {
-  const { examName, difficulty, type, schedule, duration } = req.body;
-
-  if (!examName || !difficulty || !type || !schedule || !duration) {
-    return res.status(400).json({ error: 'All fields are required' });
-  }
-
-  const scheduledDate = new Date(schedule);
-  const now = new Date();
-  if (isNaN(scheduledDate.getTime())) {
-    return res.status(400).json({ error: 'Invalid schedule format' });
-  }
-  if (scheduledDate < now) {
-    return res.status(400).json({ error: 'Scheduled time cannot be in the past' });
-  }
-
-  const parsedDuration = Number(duration);
-  if (isNaN(parsedDuration) || parsedDuration <= 0) {
-    return res.status(400).json({ error: 'Duration must be a positive number' });
-  }
-
   try {
-    const questions = await Question.find({ difficulty, type }).limit(10);
+    console.log('📥 Exam create payload:', req.body);
+
+    const { examName, difficulty, type, schedule, duration, manualQuestion } = req.body;
+
+    const scheduledDate = new Date(schedule);
+    const parsedDuration = Number(duration);
+
+    const autoQuestions = await Question.find({ difficulty, type }).limit(10);
 
     const exam = await Exam.create({
       name: examName,
@@ -40,15 +27,35 @@ router.post('/create', protect, async (req, res) => {
       type,
       schedule: scheduledDate,
       duration: parsedDuration,
-      questions,
+      questions: autoQuestions.map(q => q._id),
     });
+
+    if (manualQuestion && manualQuestion.text) {
+      console.log('📥 Manual question payload:', manualQuestion);
+
+      const q = new Question({
+        text: manualQuestion.text,
+        options: manualQuestion.options || [],
+        correctAnswer: manualQuestion.correctAnswer,
+        type: manualQuestion.type.toLowerCase() === 'mcq' ? 'MCQ' : 'TrueFalse',
+        difficulty: manualQuestion.difficulty || difficulty,
+        schedule: scheduledDate,
+        duration: parsedDuration,
+        createdBy: req.user?._id, // safe check
+      });
+
+      await q.save();
+      exam.questions.push(q._id);
+      await exam.save();
+    }
 
     res.status(201).json({ message: 'Exam created successfully', exam });
   } catch (err) {
     console.error('❌ Exam creation error:', err);
-    res.status(500).json({ error: 'Failed to create exam' });
+    res.status(500).json({ error: 'Failed to create exam', details: err.message });
   }
 });
+
 
 // Get all assigned exams
 router.get('/assigned', protect, async (req, res) => {

@@ -10,6 +10,11 @@ export default function CreateExam() {
   const [duration, setDuration] = useState('');
   const [message, setMessage] = useState('');
 
+  // Manual questions state (array of questions)
+  const [manualQuestions, setManualQuestions] = useState([
+    { text: '', options: ['', '', '', ''], correctAnswer: '' },
+  ]);
+
   const handleCreate = async (e) => {
     e.preventDefault();
 
@@ -24,15 +29,22 @@ export default function CreateExam() {
       const res = await fetch(`${apiUrl}/api/exams/create`, {
         method: 'POST',
         credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           examName,
           difficulty,
           type,
-          schedule: scheduledDate.toISOString(), // ✅ updated here
+          schedule: scheduledDate.toISOString(),
           duration: Number(duration),
+          manualQuestions: manualQuestions.map((q) => ({
+            text: q.text,
+            options: type === 'MCQ' ? q.options : [],
+            correctAnswer: q.correctAnswer,
+            type: type.toLowerCase(), // "mcq" or "truefalse"
+            difficulty,
+            schedule: scheduledDate.toISOString(),
+            duration: Number(duration),
+          })),
         }),
       });
 
@@ -45,10 +57,32 @@ export default function CreateExam() {
         setType('');
         setSchedule('');
         setDuration('');
+        setManualQuestions([{ text: '', options: ['', '', '', ''], correctAnswer: '' }]);
       }
     } catch (err) {
       setMessage('Server error');
     }
+  };
+
+  const handleQuestionChange = (index, field, value) => {
+    const updated = [...manualQuestions];
+    updated[index][field] = value;
+    setManualQuestions(updated);
+  };
+
+  const handleOptionChange = (qIndex, optIndex, value) => {
+    const updated = [...manualQuestions];
+    updated[qIndex].options[optIndex] = value;
+    setManualQuestions(updated);
+  };
+
+  const addQuestion = () => {
+    setManualQuestions([...manualQuestions, { text: '', options: ['', '', '', ''], correctAnswer: '' }]);
+  };
+
+  const deleteQuestion = (index) => {
+    const updated = manualQuestions.filter((_, i) => i !== index);
+    setManualQuestions(updated.length ? updated : [{ text: '', options: ['', '', '', ''], correctAnswer: '' }]);
   };
 
   return (
@@ -59,26 +93,15 @@ export default function CreateExam() {
             📝 Create Exam
           </h2>
           <form onSubmit={handleCreate}>
+            {/* Exam fields */}
             <div className="mb-3">
               <label className="form-label fw-semibold">Exam Name</label>
-              <input
-                type="text"
-                className="form-control"
-                placeholder="Enter exam name"
-                value={examName}
-                onChange={(e) => setExamName(e.target.value)}
-                required
-              />
+              <input type="text" className="form-control" value={examName} onChange={(e) => setExamName(e.target.value)} required />
             </div>
 
             <div className="mb-3">
               <label className="form-label fw-semibold">Difficulty Level</label>
-              <select
-                className="form-select"
-                value={difficulty}
-                onChange={(e) => setDifficulty(e.target.value)}
-                required
-              >
+              <select className="form-select" value={difficulty} onChange={(e) => setDifficulty(e.target.value)} required>
                 <option value="">Select difficulty</option>
                 <option value="Easy">Easy</option>
                 <option value="Medium">Medium</option>
@@ -88,12 +111,7 @@ export default function CreateExam() {
 
             <div className="mb-3">
               <label className="form-label fw-semibold">Question Type</label>
-              <select
-                className="form-select"
-                value={type}
-                onChange={(e) => setType(e.target.value)}
-                required
-              >
+              <select className="form-select" value={type} onChange={(e) => setType(e.target.value)} required>
                 <option value="">Select type</option>
                 <option value="MCQ">Multiple Choice</option>
                 <option value="TrueFalse">True/False</option>
@@ -102,37 +120,87 @@ export default function CreateExam() {
 
             <div className="mb-3">
               <label className="form-label fw-semibold">Schedule Date & Time</label>
-              <input
-                type="datetime-local"
-                className="form-control"
-                value={schedule}
-                onChange={(e) => setSchedule(e.target.value)}
-                required
-              />
+              <input type="datetime-local" className="form-control" value={schedule} onChange={(e) => setSchedule(e.target.value)} required />
             </div>
 
             <div className="mb-3">
-              <label className="form-label fw-semibold">Duration (in minutes)</label>
-              <input
-                type="number"
-                className="form-control"
-                placeholder="e.g. 60"
-                value={duration}
-                onChange={(e) => setDuration(e.target.value)}
-                required
-              />
+              <label className="form-label fw-semibold">Duration (minutes)</label>
+              <input type="number" className="form-control" value={duration} onChange={(e) => setDuration(e.target.value)} required />
             </div>
 
+            {/* Manual Questions */}
+            <h5 className="mt-4">➕ Add Manual Questions</h5>
+            {manualQuestions.map((q, qIndex) => (
+              <div key={qIndex} className="border rounded p-3 mb-3">
+                <div className="mb-3">
+                  <label className="form-label fw-semibold">Question Text</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={q.text}
+                    onChange={(e) => handleQuestionChange(qIndex, 'text', e.target.value)}
+                  />
+                </div>
+
+                {type === 'MCQ' && (
+                  <div className="mb-3">
+                    <label className="form-label fw-semibold">Options</label>
+                    {q.options.map((opt, idx) => (
+                      <input
+                        key={idx}
+                        type="text"
+                        className="form-control mb-2"
+                        placeholder={`Option ${idx + 1}`}
+                        value={opt}
+                        onChange={(e) => handleOptionChange(qIndex, idx, e.target.value)}
+                      />
+                    ))}
+                  </div>
+                )}
+
+                <div className="mb-3">
+                  <label className="form-label fw-semibold">Correct Answer</label>
+                  {type === 'TrueFalse' ? (
+                    <select
+                      className="form-select"
+                      value={q.correctAnswer}
+                      onChange={(e) => handleQuestionChange(qIndex, 'correctAnswer', e.target.value)}
+                    >
+                      <option value="">Select answer</option>
+                      <option value="true">True</option>
+                      <option value="false">False</option>
+                    </select>
+                  ) : (
+                    <select
+                      className="form-select"
+                      value={q.correctAnswer}
+                      onChange={(e) => handleQuestionChange(qIndex, 'correctAnswer', e.target.value)}
+                    >
+                      <option value="">Select correct option</option>
+                      {q.options.map((opt, idx) => (
+                        <option key={idx} value={opt}>
+                          {opt || `Option ${idx + 1}`}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+
+                <button type="button" className="btn btn-danger" onClick={() => deleteQuestion(qIndex)}>
+                  🗑️ Delete Question
+                </button>
+              </div>
+            ))}
+
+            <button type="button" className="btn btn-secondary mb-3" onClick={addQuestion}>
+              ➕ Add Another Question
+            </button>
+
             <button type="submit" className="btn btn-primary w-100 animate__animated animate__pulse">
-              <i className="bi bi-calendar-plus me-2"></i>
               Create Exam
             </button>
 
-            {message && (
-              <div className="mt-3 text-center text-danger small animate__animated animate__fadeInUp">
-                {message}
-              </div>
-            )}
+            {message && <div className="mt-3 text-center text-danger small">{message}</div>}
           </form>
         </div>
       </div>
