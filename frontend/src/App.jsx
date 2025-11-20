@@ -1,5 +1,3 @@
-import { useState } from 'react';
-import './App.css';
 import { Routes, Route } from 'react-router-dom';
 import Signup from './Components/Signup.jsx';
 import Login from './Components/Login.jsx';
@@ -17,30 +15,34 @@ import ResultPage from './Components/Student/ResultPage.jsx';
 import FlaggedIncidents from './Components/Admin/FlaggedIncidents.jsx';
 import StudentProfile from './Components/Student/StudentProfile.jsx';
 import EditUser from './Components/Admin/EditUser.jsx';
-function App() {
-  const [count, setCount] = useState(0);
 
+function App() {
   return (
-    <>
-      <Routes>
-        <Route path="/" element={<Signup />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/studentDashboard" element={<StudentDashboard />} />
-        <Route path="/adminDashboard" element={<AdminDashboard />} />
-        <Route path="/admin/view-students" element={<ManageUsers />} />
-        <Route path="/reset-password/:token" element={<ResetPassword />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/admin/create-exam" element={<CreateExam />} />
-        <Route path="/admin/assigned-exams" element={<AssignedExams />} />
-        <Route path="/exam/instructions/:examId" element={<ExamInstructions />} />
-        <Route path="/student/attempt/:examId/:attemptId" element={<AttemptExam />} />
-        <Route path="/exam" element={<ScheduledExams />} />
-        <Route path="/student/result/:attemptId" element={<ResultPage />} />
-        <Route path="/admin/flagged-incidents" element={<FlaggedIncidents />} />
-        <Route path="/profile" element={<StudentProfile />} />
-        <Route path="/admin/edit-user/:id" element={<EditUser />} />
-      </Routes>
-    </>
+    <Routes>
+      {/* Public routes */}
+      <Route path="/" element={<Signup />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/reset-password/:token" element={<ResetPassword />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+
+      {/* Student routes */}
+      <Route path="/studentDashboard" element={<StudentDashboard />} />
+      <Route path="/exam/instructions/:examId" element={<ExamInstructions />} />
+      <Route path="/student/attempt/:examId/:attemptId" element={<AttemptExam />} />
+      <Route path="/exam" element={<ScheduledExams />} />
+      <Route path="/student/result/:attemptId" element={<ResultPage />} />
+      <Route path="/profile" element={<StudentProfile />} />
+
+      {/* Admin routes (nested under /admin) */}
+      <Route path="/admin" element={<AdminDashboard />}>
+        <Route index element={<p>Welcome, Admin!</p>} />
+        <Route path="view-students" element={<ManageUsers />} />
+        <Route path="create-exam" element={<CreateExam />} />
+        <Route path="assigned-exams" element={<AssignedExams />} />
+        <Route path="flagged-incidents" element={<FlaggedIncidents />} />
+        <Route path="edit-user/:id" element={<EditUser />} />
+      </Route>
+    </Routes>
   );
 }
 

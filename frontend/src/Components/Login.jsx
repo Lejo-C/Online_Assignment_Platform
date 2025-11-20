@@ -26,10 +26,11 @@ export default function Login() {
         
 
         if (role === 'admin') {
-          navigate('/adminDashboard');
-        } else {
-          navigate('/studentDashboard');
-        }
+  navigate('/admin');   // ✅ parent route for AdminDashboard
+} else {
+  navigate('/studentDashboard');
+}
+
       } else {
         
         setMessage(data.error || 'Login failed');

@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 const apiUrl = import.meta.env.VITE_API_URL;
-
+import { useNavigate } from 'react-router-dom';
 export default function StudentProfile() {
     const [student, setStudent] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -10,7 +10,7 @@ export default function StudentProfile() {
     const [success, setSuccess] = useState('');
     const fileInputRef = useRef(null);
     const [previewUrl, setPreviewUrl] = useState('');
-
+    const navigate = useNavigate();
     useEffect(() => {
         const fetchProfile = async () => {
             try {
@@ -210,6 +210,12 @@ export default function StudentProfile() {
   >
     Logout
   </button>
+  <button
+      onClick={() => navigate(-1)} // ✅ go back one step in history
+      className="btn btn-outline-secondary absolute bottom-4 left-50"
+    >
+      <i className="bi bi-arrow-left me-2"></i> Back
+    </button>
 </div>
 
     );

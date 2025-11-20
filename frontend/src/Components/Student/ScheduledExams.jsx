@@ -8,7 +8,7 @@ export default function ScheduledExams() {
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-
+  
   const refreshExams = async () => {
     setLoading(true);
     try {
@@ -151,8 +151,16 @@ export default function ScheduledExams() {
               ))}
             </tbody>
           </table>
+          
         </div>
+        
       )}
+      <button
+      onClick={() => navigate(-1)} // ✅ go back one step in history
+      className="btn btn-outline-secondary absolute bottom-4 left-10"
+    >
+      <i className="bi bi-arrow-left me-2"></i> Back
+    </button>
     </div>
   );
 }
